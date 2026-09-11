@@ -1,0 +1,62 @@
+
+> library(arcgistiles)
+
+> vts <- vector_tile_server(open_street_map_url())
+
+> vts
+<arcgistiles::VectorTileServer> "OpenStreetMap_v2"
+<https://basemaps.arcgis.com/arcgis/rest/services/OpenStreetMap_v2/VectorTileServer>
+CRS: EPSG:3857
+Capabilities: "TilesOnly" and "Tilemap"
+Levels: 0-22 at 512x512 pbf
+
+> tile_info(vts)
+<TileInfo> 512x512 pbf at 96 dpi
+CRS: EPSG:3857
+Origin: -20037508.342787 and 20037508.342787
+Levels: 0-22 (23 lods)
+
+> style <- vector_tile_style(vts)
+
+> names(style)
+[1] "version" "sprite"  "glyphs"  "sources" "layers" 
+
+> style$sprite
+[1] "https://basemaps.arcgis.com/arcgis/rest/services/OpenStreetMap_v2/VectorTileServer/resources/sprites/sprite"
+
+> style$glyphs
+[1] "https://basemaps.arcgis.com/arcgis/rest/services/OpenStreetMap_v2/VectorTileServer/resources/fonts/{fontstack}/{range}.pbf"
+
+> length(style$layers)
+[1] 9
+
+> head(vector_tile_fonts(vts))
+[1] "Architects Daughter Regular"    "Arial Unicode MS Bold"         
+[3] "Arial Unicode MS Regular"       "Avenir Next LT Pro Bold"       
+[5] "Avenir Next LT Pro Bold Italic" "Avenir Next LT Pro Demi"       
+
+> head(vector_tile_resources(vts), 4)
+[1] "../fonts/Architects Daughter Regular/0-255.pbf"   
+[2] "../fonts/Architects Daughter Regular/256-511.pbf" 
+[3] "../fonts/Architects Daughter Regular/512-767.pbf" 
+[4] "../fonts/Architects Daughter Regular/768-1023.pbf"
+
+> sprite <- vector_tile_sprite(vts)
+
+> file.size(sprite)
+[1]  82335 866408
+
+> bbox <- sf::st_bbox(
++   c(xmin = -71.2, ymin = 42.3, xmax = -71.0, ymax = 42.4),
++   crs = sf::st_crs(4326)
++ )
+
+> tiles <- get_vector_tiles(vts, bbox, level = 12L, progress = FALSE)
+
+> tiles
+<TileSet> 8/8 tiles at level 12
+Format: pbf
+CRS: EPSG:3857
+
+> file.size(tiles@tiles$path)
+[1] 53922 83729 96924 33535 57412 72798 87365 13687

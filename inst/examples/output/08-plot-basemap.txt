@@ -1,0 +1,58 @@
+
+> library(arcgistiles)
+
+> library(sf)
+Linking to GEOS 3.13.0, GDAL 3.8.5, PROJ 9.5.1; sf_use_s2() is TRUE
+
+> library(terra)
+terra 1.9.46
+
+Attaching package: ‘terra’
+
+The following objects are masked from ‘package:testthat’:
+
+    compare, describe
+
+
+> nc <- st_read(system.file("shape/nc.shp", package = "sf"), quiet = TRUE)
+
+> nc <- st_transform(nc, 3857)
+
+> ms <- map_server(world_topo_map_url())
+
+> tiles <- get_tiles(ms, st_bbox(nc), size = c(1600, 800), progress = FALSE)
+
+> tiles
+<TileSet> 21/21 tiles at level 8
+Format: JPEG
+CRS: EPSG:3857
+
+> basemap <- as_rast(tiles)
+
+> basemap
+class       : SpatRaster
+size        : 768, 1792, 3  (nrow, ncol, nlyr)
+resolution  : 611.4962, 611.4962  (x, y)
+extent      : -9392582, -8296781, 3913576, 4383205  (xmin, xmax, ymin, ymax)
+coord. ref. : WGS 84 / Pseudo-Mercator (EPSG:3857)
+source(s)   : memory
+colors rgb  : 1, 2, 3
+varname     : 8_100_68
+names       : red, green, blue
+min values  :   0,     0,    0
+max values  : 255,   255,  255
+
+> out <- "nc-basemap.png"
+
+> png(out, width = 1600, height = 800)
+
+> plotRGB(basemap)
+
+> plot(st_geometry(nc), add = TRUE, border = "#d7191c", lwd = 2)
+
+> dev.off()
+null device 
+          1 
+
+> file.size(out)
+[1] 1768517

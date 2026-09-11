@@ -1,0 +1,55 @@
+
+> library(arcgistiles)
+
+> ms <- map_server(world_imagery_url())
+
+> ms
+<arcgistiles::MapServer> "Layers"
+<https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer>
+CRS: EPSG:3857
+Capabilities: "Map", "Query", "Data", and "Tilemap"
+Levels: 0-23 at 256x256 JPEG
+Layers: 19
+
+> tile_info(ms)
+<TileInfo> 256x256 JPEG at 96 dpi
+CRS: EPSG:3857
+Origin: -20037508.342787 and 20037508.342787
+Levels: 0-23 (24 lods)
+
+> head(lods(ms), 6)
+  level resolution     scale tile_width tile_height
+1     0  156543.03 591657528   40075017    40075017
+2     1   78271.52 295828764   20037508    20037508
+3     2   39135.76 147914382   10018754    10018754
+4     3   19567.88  73957191    5009377     5009377
+5     4    9783.94  36978595    2504689     2504689
+6     5    4891.97  18489298    1252344     1252344
+
+> service_bbox(ms)
+     xmin      ymin      xmax      ymax 
+-20037507 -19971869  20037507  19971869 
+
+> ms@capabilities
+[1] "Map"     "Query"   "Data"    "Tilemap"
+
+> ms@layers[1:5, c("id", "name")]
+  id                         name
+1  0                World Imagery
+2  1   Low Resolution 15m Imagery
+3  2 High Resolution 60cm Imagery
+4  3 High Resolution 30cm Imagery
+5  4                    Citations
+
+> census <- map_server(census_url())
+
+> census
+<arcgistiles::MapServer> "Layers"
+<https://sampleserver6.arcgisonline.com/arcgis/rest/services/Census/MapServer>
+CRS: EPSG:4269
+Capabilities: "Map", "Query", and "Data"
+Cached: FALSE
+Layers: 4
+
+> census@cached
+[1] FALSE

@@ -1,0 +1,42 @@
+
+> library(arcgistiles)
+
+> library(arcgisutils)
+
+Attaching package: ‘arcgisutils’
+
+The following objects are masked from ‘package:arcgistiles’:
+
+    %||%, compact
+
+The following object is masked from ‘package:base’:
+
+    %||%
+
+
+> set_arc_token(auth_user())
+
+> vts <- vector_tile_server(open_street_map_url())
+
+> vts@export_tiles_allowed
+[1] TRUE
+
+> vts@max_export_tiles
+[1] 25000
+
+> job <- export_tiles_job(vts, service_bbox(vts), levels = 0:2)
+
+> job
+<TileExportJob> "9736be36ad5b84f3"
+<https://basemaps.arcgis.com/arcgis/rest/services/OpenStreetMap_v2/VectorTileServer>
+Status: esriJobSubmitted
+
+> job_await(job, interval = 2, timeout = 600)
+
+> job_status(job)
+[1] "esriJobSucceeded"
+
+> package <- write_tile_package(job)
+
+> file.size(package)
+[1] 68138894
