@@ -32,6 +32,10 @@ dataset. Map services only.}
 
 \item{area_of_interest}{An \code{sf} or \code{sfc} polygon. Supersedes \code{bbox}.}
 
+\item{interval}{Double. Seconds between polls.}
+
+\item{timeout}{Double. Seconds to wait before giving up.}
+
 \item{error_call}{The execution environment of a currently
 running function, e.g. \code{caller_env()}. The function will be
 mentioned in error messages as the source of the error. See the

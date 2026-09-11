@@ -7,10 +7,7 @@
 MapImage(
   path = NA_character_,
   bbox = numeric(0),
-  crs = (structure(function (.data) 
-
-    stop2(sprintf("S3 class <\%s> doesn't have a constructor.", "crs"), call = NULL),
-    class = "S7_constructor"))(),
+  crs = NULL,
   size = integer(0),
   format = NA_character_,
   scale = NA_real_

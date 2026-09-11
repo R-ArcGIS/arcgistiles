@@ -8,17 +8,11 @@ Service(
   url = NA_character_,
   metadata = list(),
   name = NA_character_,
-  crs = (structure(function (.data) 
-
-    stop2(sprintf("S3 class <\%s> doesn't have a constructor.", "crs"), call = NULL),
-    class = "S7_constructor"))(),
+  crs = NULL,
   full_extent = numeric(0),
-  tile_info = TileInfo(),
+  tile_info = NULL,
   capabilities = character(0),
-  token = (structure(function (.data) 
-
-    stop2(sprintf("S3 class <\%s> doesn't have a constructor.", "httr2_token"), call =
-    NULL), class = "S7_constructor"))()
+  token = NULL
 )
 }
 \arguments{

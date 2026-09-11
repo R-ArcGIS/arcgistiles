@@ -26,7 +26,7 @@ Service <- S7::new_class(
     name = s7x::class_string,
     crs = class_crs,
     full_extent = S7::class_double,
-    tile_info = S7::new_union(TileInfo, NULL),
+    tile_info = S7::new_union(NULL, TileInfo),
     capabilities = S7::class_character,
     token = class_token
   )
@@ -61,7 +61,7 @@ MapServer <- S7::new_class(
   package = "arcgistiles",
   properties = list(
     cached = s7x::class_boolean,
-    layers = S7::class_data.frame,
+    layers = class_table,
     export_tiles_allowed = s7x::class_boolean,
     max_export_tiles = s7x::class_float
   )

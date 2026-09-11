@@ -8,6 +8,8 @@ tile_info(x, ...)
 }
 \arguments{
 \item{x}{A \link{TileInfo}, \link{MapServer}, or \link{VectorTileServer}.}
+
+\item{...}{Passed to methods.}
 }
 \value{
 A \link{TileInfo} object.

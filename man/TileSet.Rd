@@ -5,24 +5,8 @@
 \title{Downloaded tiles}
 \usage{
 TileSet(
-  tiles = (structure(function (.data = list(), row.names = NULL) 
- {
-     if
-    (is.null(row.names)) {
-         list2DF(.data)
-     }
-     else {
-         out <-
-    list2DF(.data, length(row.names))
-         attr(out, "row.names") <- row.names
-      
-      out
-     }
- }, class = "S7_constructor"))(),
-  crs = (structure(function (.data) 
-
-    stop2(sprintf("S3 class <\%s> doesn't have a constructor.", "crs"), call = NULL),
-    class = "S7_constructor"))(),
+  tiles = data.frame(),
+  crs = NULL,
   level = NA_integer_,
   format = NA_character_,
   url = NA_character_

@@ -55,6 +55,8 @@ service's own.}
 
 \item{transparent}{Bool. Render the background transparent.}
 
+\item{progress}{Bool. Show a download progress bar.}
+
 \item{...}{Additional query parameters passed to the service.}
 
 \item{error_call}{The execution environment of a currently

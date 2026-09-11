@@ -19,7 +19,7 @@ TileSet <- S7::new_class(
   "TileSet",
   package = "arcgistiles",
   properties = list(
-    tiles = S7::class_data.frame,
+    tiles = class_table,
     crs = class_crs,
     level = s7x::class_int,
     format = s7x::class_string,

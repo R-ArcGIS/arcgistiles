@@ -8,32 +8,13 @@ MapServer(
   url = NA_character_,
   metadata = list(),
   name = NA_character_,
-  crs = (structure(function (.data) 
-
-    stop2(sprintf("S3 class <\%s> doesn't have a constructor.", "crs"), call = NULL),
-    class = "S7_constructor"))(),
+  crs = NULL,
   full_extent = numeric(0),
-  tile_info = TileInfo(),
+  tile_info = NULL,
   capabilities = character(0),
-  token = (structure(function (.data) 
-
-    stop2(sprintf("S3 class <\%s> doesn't have a constructor.", "httr2_token"), call =
-    NULL), class = "S7_constructor"))(),
+  token = NULL,
   cached = NA,
-  layers = (structure(function (.data = list(), row.names = NULL) 
- {
-     if
-    (is.null(row.names)) {
-         list2DF(.data)
-     }
-     else {
-         out <-
-    list2DF(.data, length(row.names))
-         attr(out, "row.names") <- row.names
-      
-      out
-     }
- }, class = "S7_constructor"))(),
+  layers = data.frame(),
   export_tiles_allowed = NA,
   max_export_tiles = NA_real_
 )

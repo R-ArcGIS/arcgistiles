@@ -66,4 +66,8 @@ importFrom(S7,
   new_property,
   prop
 )
+importFrom(s7x,
+  class_string,
+  new_enum
+)
 importFrom(sf,st_bbox)

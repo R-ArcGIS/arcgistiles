@@ -81,6 +81,7 @@ extents_as_sfc <- function(pages, crs) {
 #' @param dir String. Directory to write images into. Created if needed.
 #' @param page_names Character. File name stems, one per page. Defaults to
 #'   `page-001`, `page-002`, and so on.
+#' @inheritParams get_tiles
 #' @param margin Double. Fraction to expand each page extent by before
 #'   exporting.
 #' @returns A data frame with one row per page and columns `page`, `name`,

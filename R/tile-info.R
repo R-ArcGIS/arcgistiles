@@ -38,7 +38,7 @@ TileInfo <- S7::new_class(
     format = s7x::class_string,
     origin = S7::class_double,
     crs = class_crs,
-    lods = S7::class_data.frame
+    lods = class_table
   ),
   validator = function(self) {
     if (length(self@origin) != 2L) {
@@ -96,6 +96,7 @@ as_tile_info <- function(x, call = rlang::caller_env()) {
 #' Tiling scheme of a service
 #'
 #' @param x A [TileInfo], [MapServer], or [VectorTileServer].
+#' @param ... Passed to methods.
 #' @returns A [TileInfo] object.
 #' @family tiling scheme
 #' @export
@@ -136,6 +137,7 @@ lods <- function(x) {
 #'
 #' @inheritParams tile_info
 #' @param resolution Double. Target map units per pixel.
+#' @inheritParams tile_grid
 #' @returns An integer level.
 #' @family tiling scheme
 #' @export
@@ -210,6 +212,7 @@ lod_index <- function(info, level, call = rlang::caller_env()) {
 #'
 #' @inheritParams tile_info
 #' @param level,row,col Integer. Tile coordinates, recycled to a common length.
+#' @inheritParams tile_grid
 #' @returns A data frame with columns `level`, `row`, `col`, `xmin`, `ymin`,
 #'   `xmax`, and `ymax`.
 #' @family tiling scheme

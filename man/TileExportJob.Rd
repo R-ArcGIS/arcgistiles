@@ -4,14 +4,7 @@
 \alias{TileExportJob}
 \title{Tile export job}
 \usage{
-TileExportJob(
-  url = NA_character_,
-  job_id = NA_character_,
-  token = (structure(function (.data) 
-
-    stop2(sprintf("S3 class <\%s> doesn't have a constructor.", "httr2_token"), call =
-    NULL), class = "S7_constructor"))()
-)
+TileExportJob(url = NA_character_, job_id = NA_character_, token = NULL)
 }
 \arguments{
 \item{url}{String. Service the job was submitted to.}

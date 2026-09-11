@@ -10,6 +10,11 @@ tile_extent(x, level, row, col, error_call = rlang::caller_env())
 \item{x}{A \link{TileInfo}, \link{MapServer}, or \link{VectorTileServer}.}
 
 \item{level, row, col}{Integer. Tile coordinates, recycled to a common length.}
+
+\item{error_call}{The execution environment of a currently
+running function, e.g. \code{caller_env()}. The function will be
+mentioned in error messages as the source of the error. See the
+\code{call} argument of \code{\link[rlang:abort]{abort()}} for more information.}
 }
 \value{
 A data frame with columns \code{level}, \code{row}, \code{col}, \code{xmin}, \code{ymin},

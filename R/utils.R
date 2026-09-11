@@ -1,5 +1,12 @@
-class_crs <- S7::new_union(S7::new_S3_class("crs"), NULL)
-class_token <- S7::new_union(S7::new_S3_class("httr2_token"), NULL)
+# NULL leads the union so the generated constructor defaults to NULL rather
+# than to an S3 class that has no constructor to deparse
+class_crs <- S7::new_union(NULL, S7::new_S3_class("crs"))
+class_token <- S7::new_union(NULL, S7::new_S3_class("httr2_token"))
+
+class_table <- S7::new_property(
+  S7::class_data.frame,
+  default = quote(data.frame())
+)
 
 `%||%` <- function(x, y) if (is.null(x)) y else x
 

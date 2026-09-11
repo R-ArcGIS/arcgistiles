@@ -113,6 +113,7 @@ export_tiles_job <- function(
 #' download size instead of tiles. Map services only.
 #'
 #' @inheritParams export_tiles_job
+#' @inheritParams job_await
 #' @returns A list with the estimated `size` in bytes and `tile_count`.
 #' @family tile export
 #' @export
@@ -197,7 +198,7 @@ job_status <- function(job, error_call = rlang::caller_env()) {
 
 #' Messages from a tile export job
 #'
-#' @inheritParams job_status
+#' @inheritParams job_await
 #' @returns A data frame of job messages, or an empty data frame.
 #' @family tile export
 #' @export
@@ -285,7 +286,7 @@ job_await <- function(
 #' Reads the download URL from the finished job. Vector tile services put it on
 #' the job resource, map services expose it as a named result parameter.
 #'
-#' @inheritParams job_status
+#' @inheritParams job_await
 #' @param param String. Name of the result parameter to read when the job
 #'   resource carries no output URL.
 #' @returns The result value, usually a URL string.
