@@ -1,88 +1,79 @@
-url: https://github.com/JosiahParry/arcgistiles
-
+url: https://r.esri.com/arcgistiles/
 template:
   bootstrap: 5
-
 reference:
-  - title: Services
-    desc: Open a service and read its metadata.
-    contents:
-      - map_server
-      - vector_tile_server
-      - Service
-      - MapServer
-      - VectorTileServer
-      - known-services
+- title: Services
+  desc: Open a service and read its metadata.
+  contents:
+  - map_server
+  - vector_tile_server
+  - Service
+  - MapServer
+  - VectorTileServer
+  - known-services
+- title: Tiling scheme
+  desc: The arithmetic behind a cached service.
+  contents:
+  - TileInfo
+  - tile_info
+  - lods
+  - tile_grid
+  - tile_extent
+  - level_for_size
+  - level_for_resolution
+- title: Tiles
+  desc: Download tiles and turn them into rasters.
+  contents:
+  - get_tiles
+  - get_vector_tiles
+  - TileSet
+  - tileset_bbox
+  - tilemap
+  - as_rast
+- title: Map images
+  desc: Render an extent of a map service.
+  contents:
+  - export_map
+  - MapImage
+- title: Map series
+  desc: Export many extents at one scale.
+  contents:
+  - map_grid
+  - map_series
+- title: Vector tile resources
+  contents:
+  - vector_tile_style
+  - vector_tile_resources
+  - vector_tile_fonts
+  - vector_tile_sprite
+  - vector_tile_font
+  - read_vector_tiles
+  - vector_tile_layers
+- title: Basemaps
+  contents:
+  - basemap_styles
+  - basemap_style
+  - basemap_webmap
+  - basemap_tile_server
+  - basemap_session
+- title: Tile export
+  desc: Package a service's cache for offline use.
+  contents:
+  - export_tiles
+  - export_tiles_job
+  - estimate_export_tiles_size
+  - write_tile_package
+  - job_status
+  - job_await
+  - job_result
+  - job_messages
+  - TileExportJob
+- title: Enumerations
+  contents:
+  - image_format
+  - layer_visibility
+  - export_by
+  - storage_format
+  - style_family
+  - places
 
-  - title: Tiling scheme
-    desc: The arithmetic behind a cached service.
-    contents:
-      - TileInfo
-      - tile_info
-      - lods
-      - tile_grid
-      - tile_extent
-      - level_for_size
-      - level_for_resolution
-
-  - title: Tiles
-    desc: Download tiles and turn them into rasters.
-    contents:
-      - get_tiles
-      - get_vector_tiles
-      - TileSet
-      - tileset_bbox
-      - tilemap
-      - as_rast
-
-  - title: Map images
-    desc: Render an extent of a map service.
-    contents:
-      - export_map
-      - MapImage
-
-  - title: Map series
-    desc: Export many extents at one scale.
-    contents:
-      - map_grid
-      - map_series
-
-  - title: Vector tile resources
-    contents:
-      - vector_tile_style
-      - vector_tile_resources
-      - vector_tile_fonts
-      - vector_tile_sprite
-      - vector_tile_font
-      - read_vector_tiles
-      - vector_tile_layers
-
-  - title: Basemaps
-    contents:
-      - basemap_styles
-      - basemap_style
-      - basemap_webmap
-      - basemap_tile_server
-      - basemap_session
-
-  - title: Tile export
-    desc: Package a service's cache for offline use.
-    contents:
-      - export_tiles
-      - export_tiles_job
-      - estimate_export_tiles_size
-      - write_tile_package
-      - job_status
-      - job_await
-      - job_result
-      - job_messages
-      - TileExportJob
-
-  - title: Enumerations
-    contents:
-      - image_format
-      - layer_visibility
-      - export_by
-      - storage_format
-      - style_family
-      - places

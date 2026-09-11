@@ -1,5 +1,9 @@
 # arcgistiles
 
+<!-- badges: start -->
+[![R-CMD-check](https://github.com/R-ArcGIS/arcgistiles/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/R-ArcGIS/arcgistiles/actions/workflows/R-CMD-check.yaml)
+<!-- badges: end -->
+
 Map images, tiles, and basemaps from ArcGIS services.
 
 `arcgistiles` reads map services and vector tile services, downloads the tiles
@@ -11,7 +15,7 @@ your own vector data.
 
 ``` r
 # install.packages("pak")
-pak::pak("JosiahParry/arcgistiles")
+pak::pak("R-ArcGIS/arcgistiles")
 ```
 
 ## Reading a service

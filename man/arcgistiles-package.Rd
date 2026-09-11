@@ -11,8 +11,10 @@ Read map services, vector tile services, and the 'ArcGIS' basemap styles service
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://github.com/JosiahParry/arcgistiles}
-  \item Report bugs at \url{https://github.com/JosiahParry/arcgistiles/issues}
+  \item \url{https://github.com/r-arcgis/arcgistiles}
+  \item \url{https://developers.arcgis.com/r-bridge/api-reference/arcgistiles}
+  \item \url{https://r.esri.com/arcgistiles/}
+  \item Report bugs at \url{https://github.com/r-arcgis/arcgistiles/issues}
 }
 
 }
