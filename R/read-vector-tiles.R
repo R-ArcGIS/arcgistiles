@@ -62,27 +62,9 @@ read_vector_tiles <- function(
       return(NULL)
     }
 
-    # the same layer can be LINESTRING in one tile and MULTILINESTRING in the
-    # next, and the row binding backends refuse columns whose classes disagree
-    classes <- vapply(pieces, function(p) class(sf::st_geometry(p))[1L], character(1))
-
-    if (length(unique(classes)) > 1L) {
-      pieces <- lapply(pieces, function(p) {
-        sf::st_set_geometry(p, sf::st_cast(sf::st_geometry(p), "GEOMETRY"))
-      })
-    }
-
-    bound <- rbind_results(pieces, call = error_call)
-
-    # collapse::rowbind keeps the first piece's stale bbox, so rebuild the
-    # geometry column for st_bbox() to be right
-    geometry <- sf::st_geometry(bound)
-    attr(geometry, "bbox") <- NULL
-
-    sf::st_set_geometry(
-      bound,
-      sf::st_sfc(unclass(geometry), crs = sf::st_crs(geometry))
-    )
+    # a layer is LINESTRING in one tile and MULTILINESTRING in the next, which
+    # rbind_results() promotes for us
+    rbind_results(pieces, call = error_call)
   })
 
   names(out) <- present

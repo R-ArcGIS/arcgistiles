@@ -45,7 +45,8 @@
   style and resources.
 * `read_vector_tiles()` decodes downloaded `.pbf` tiles into `sf`, one data
   frame per layer bound across tiles, and `vector_tile_layers()` lists what a
-  tile set holds. Needs the protolite package.
+  tile set holds. Needs the protolite package. A layer whose geometry type
+  varies between tiles is promoted by `arcgisutils::rbind_results()`.
 * `basemap_styles()`, `basemap_languages()`, and `basemap_worldviews()` browse
   the basemap styles service without a token. `basemap_style()`,
   `basemap_webmap()`, and `basemap_session()` need one.

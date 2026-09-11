@@ -137,8 +137,8 @@ vector_tile_layers(tiles)
 
 parts <- read_vector_tiles(tiles, layers = c("road", "water area"), crs = 3857)
 parts$road
-#> Simple feature collection with 62 features and 3 fields
-#> Geometry type: MULTILINESTRING
+#> Simple feature collection with 106 features and 4 fields
+#> Geometry type: GEOMETRY
 #> Projected CRS: WGS 84 / Pseudo-Mercator
 ```
 
