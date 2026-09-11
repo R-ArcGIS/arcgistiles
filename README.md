@@ -127,8 +127,28 @@ vts <- vector_tile_server(open_street_map_url())
 vector_tile_style(vts)          # Mapbox GL style, with absolute resource URLs
 vector_tile_fonts(vts)          # font stacks the service publishes
 vector_tile_sprite(vts)         # sprite sheet and index
-get_vector_tiles(vts, bbox, level = 12L)
 ```
+
+Downloaded `.pbf` tiles decode straight into `sf`, one data frame per layer,
+bound across tiles:
+
+``` r
+tiles <- get_vector_tiles(vts, bbox, level = 14L)
+
+vector_tile_layers(tiles)
+#> [1] "administrative boundary" "amenity area" "amenity point" ...
+
+parts <- read_vector_tiles(tiles, layers = c("road", "water area"), crs = 3857)
+parts$road
+#> Simple feature collection with 62 features and 3 fields
+#> Geometry type: MULTILINESTRING
+#> Projected CRS: WGS 84 / Pseudo-Mercator
+```
+
+Roads and water from OpenStreetMap vector tiles over World Imagery, from
+`09-vector-tile-sf.R`:
+
+![Boston streets and water decoded from vector tiles over imagery](inst/examples/output/boston-vector-tiles.png)
 
 The basemap styles service is browsable without a token:
 

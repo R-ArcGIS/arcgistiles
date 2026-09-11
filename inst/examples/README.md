@@ -13,6 +13,7 @@ against live services and its console output captured in `output/`.
 | `06-basemap-styles.R` | Browsing the basemap styles catalogue | `output/06-basemap-styles.txt` |
 | `07-export-tiles.R` | Asynchronous tile package export | `output/07-export-tiles.txt` |
 | `08-plot-basemap.R` | Plotting vector data over a downloaded basemap | `output/nc-basemap.png` |
+| `09-vector-tile-sf.R` | Decoding vector tiles into `sf` and drawing them over imagery | `output/boston-vector-tiles.png` |
 
 Only `07-export-tiles.R` needs a token. The rest run against public services.
 

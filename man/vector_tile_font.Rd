@@ -41,7 +41,9 @@ vector_tile_font(vts, vector_tile_fonts(vts)[1], "0-255")
 \seealso{
 Other vector tiles:
 \code{\link[=get_vector_tiles]{get_vector_tiles()}},
+\code{\link[=read_vector_tiles]{read_vector_tiles()}},
 \code{\link[=vector_tile_fonts]{vector_tile_fonts()}},
+\code{\link[=vector_tile_layers]{vector_tile_layers()}},
 \code{\link[=vector_tile_resources]{vector_tile_resources()}},
 \code{\link[=vector_tile_sprite]{vector_tile_sprite()}},
 \code{\link[=vector_tile_style]{vector_tile_style()}}

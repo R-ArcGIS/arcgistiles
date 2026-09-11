@@ -24,3 +24,14 @@ skip_if_no_network <- function() {
 service_extent <- function() {
   c(-20037508.342787, -20037508.342787, 20037508.342787, 20037508.342787)
 }
+
+boston_vector_tiles <- function() {
+  service <- vector_tile_server(open_street_map_url())
+
+  bbox <- sf::st_bbox(
+    c(xmin = -71.10, ymin = 42.35, xmax = -71.08, ymax = 42.36),
+    crs = sf::st_crs(4326)
+  )
+
+  get_vector_tiles(service, bbox, level = 14L, progress = FALSE)
+}

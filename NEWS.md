@@ -37,6 +37,9 @@
 * `vector_tile_style()`, `vector_tile_resources()`, `vector_tile_fonts()`,
   `vector_tile_sprite()`, and `vector_tile_font()` read a vector tile service's
   style and resources.
+* `read_vector_tiles()` decodes downloaded `.pbf` tiles into `sf`, one data
+  frame per layer bound across tiles, and `vector_tile_layers()` lists what a
+  tile set holds. Needs the protolite package.
 * `basemap_styles()`, `basemap_languages()`, and `basemap_worldviews()` browse
   the basemap styles service without a token. `basemap_style()`,
   `basemap_webmap()`, and `basemap_session()` need one.

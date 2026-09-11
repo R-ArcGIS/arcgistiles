@@ -100,3 +100,17 @@ Tile arithmetic is tested offline against a synthetic Web Mercator
 Network tests call `skip_if_no_network()` and assert only that the essential
 fields are present, never the exact shape of a response, so they do not break
 when a service changes.
+
+### Vector tile decoding
+
+`read_vector_tiles()` uses `protolite::read_mvt_sf()`. Two things matter:
+
+- Esri vector tiles are not gzipped on the wire despite `tileCompression`
+  saying `gzip`, so the bytes go straight to protolite.
+- protolite takes `zxy = c(z, x, y)` where `x` is the Esri **column** and `y`
+  is the **row**. Esri tile paths are `tile/{z}/{y}/{x}`, so the two orders are
+  reversed relative to each other. Getting this backwards still decodes, it
+  just puts the features in the wrong place.
+
+Features are clipped to their tile, so the same road arrives once per tile it
+crosses and semi transparent fills double draw at the seams.

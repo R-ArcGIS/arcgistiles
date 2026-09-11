@@ -56,6 +56,8 @@ reference:
       - vector_tile_fonts
       - vector_tile_sprite
       - vector_tile_font
+      - read_vector_tiles
+      - vector_tile_layers
 
   - title: Basemaps
     contents:

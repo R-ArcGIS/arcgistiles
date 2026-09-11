@@ -30,8 +30,10 @@ vector_tile_style(vector_tile_server(open_street_map_url()))
 \seealso{
 Other vector tiles:
 \code{\link[=get_vector_tiles]{get_vector_tiles()}},
+\code{\link[=read_vector_tiles]{read_vector_tiles()}},
 \code{\link[=vector_tile_font]{vector_tile_font()}},
 \code{\link[=vector_tile_fonts]{vector_tile_fonts()}},
+\code{\link[=vector_tile_layers]{vector_tile_layers()}},
 \code{\link[=vector_tile_resources]{vector_tile_resources()}},
 \code{\link[=vector_tile_sprite]{vector_tile_sprite()}}
 }
