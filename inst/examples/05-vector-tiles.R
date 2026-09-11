@@ -18,10 +18,7 @@ head(vector_tile_resources(vts), 4)
 sprite <- vector_tile_sprite(vts)
 file.size(sprite)
 
-bbox <- sf::st_bbox(
-  c(xmin = -71.2, ymin = 42.3, xmax = -71.0, ymax = 42.4),
-  crs = sf::st_crs(4326)
-)
+bbox <- wk::rct(-71.2, 42.3, -71.0, 42.4, crs = 4326)
 
 tiles <- get_vector_tiles(vts, bbox, level = 12L, progress = FALSE)
 tiles

@@ -1,0 +1,46 @@
+
+> library(arcgistiles)
+
+> census <- map_server(census_url())
+
+> img <- export_map(census, c(-104, 35.6, -94.32, 41), size = c(600, 400))
+
+> img
+<MapImage> 600x400 png
+CRS: EPSG:4269
+Extent: -104, 35.0733333333333, -94.32, and 41.5266666666667
+'/var/folders/ph/3951q7qd3y178rw9q6t8_28m0000gn/T//RtmpOYU49L/file11cf07972f3d6.png'
+
+> img@bbox
+<wk_rct[1] with CRS=EPSG:4269>
+[1] [-104 35.07333 -94.32 41.52667]
+
+> img@scale
+[1] 6787846
+
+> states <- export_map(
++   census,
++   c(-104, 35.6, -94.32, 41),
++   size = c(600, 400),
++   layers = 3,
++   visibility = "show",
++   layer_defs = list(`3` = "POP2000 > 1000000"),
++   transparent = TRUE,
++   format = "png32"
++ )
+
+> states
+<MapImage> 600x400 png32
+CRS: EPSG:4269
+Extent: -104, 35.0733333333333, -94.32, and 41.5266666666667
+'/var/folders/ph/3951q7qd3y178rw9q6t8_28m0000gn/T//RtmpOYU49L/file11cf069e6a4e4.png'
+
+> as_rast(img)
+class       : SpatRaster
+size        : 400, 600, 1  (nrow, ncol, nlyr)
+resolution  : 0.01613333, 0.01613333  (x, y)
+extent      : -104, -94.32, 35.07333, 41.52667  (xmin, xmax, ymin, ymax)
+coord. ref. : lon/lat NAD83 (EPSG:4269)
+source      : file11cf07972f3d6.png
+color table : 1
+name        : gray

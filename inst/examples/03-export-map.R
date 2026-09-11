@@ -5,7 +5,7 @@ census <- map_server(census_url())
 img <- export_map(census, c(-104, 35.6, -94.32, 41), size = c(600, 400))
 img
 
-image_bbox(img)
+img@bbox
 
 img@scale
 

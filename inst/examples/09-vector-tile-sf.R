@@ -4,10 +4,7 @@ library(terra)
 
 vts <- vector_tile_server(open_street_map_url())
 
-bbox <- st_bbox(
-  c(xmin = -71.12, ymin = 42.34, xmax = -71.05, ymax = 42.38),
-  crs = st_crs(4326)
-)
+bbox <- wk::rct(-71.12, 42.34, -71.05, 42.38, crs = 4326)
 
 tiles <- get_vector_tiles(vts, bbox, level = 14L, progress = FALSE)
 tiles

@@ -26,7 +26,6 @@ ms
 #> CRS: EPSG:3857
 #> Capabilities: "Map", "Query", "Data", and "Tilemap"
 #> Levels: 0-23 at 256x256 JPEG
-#> Layers: 19
 ```
 
 The tiling scheme comes back as a table of levels of detail, with the span of a
@@ -101,16 +100,17 @@ img
 
 `map_grid()` splits an extent into pages and `map_series()` exports them in
 parallel, the equivalent of ArcGIS Pro's map series or data driven pages. Pages
-can equally come from an `sf` object, one image per feature.
+are a [wk::rct()] vector, and can equally come from an `sf` object, one image
+per feature.
 
 ``` r
 pages <- map_grid(c(-104, 35.6, -94.32, 41), nrow = 2, ncol = 3, overlap = 0.05)
 
 map_series(census, pages, size = c(800, 600), dir = "atlas")
-#>   page     name   ok       xmin ymax   scale
-#> 1    1 page-001 TRUE -104.18665 41.0 3786608
-#> 2    2 page-002 TRUE -100.96000 41.0 3786608
-#> 3    3 page-003 TRUE  -97.73333 41.0 3786608
+#>   page     name   ok                            extent   scale
+#> 1    1 page-001 TRUE [-104.18667 38.3 -100.58667 41.0] 1893304
+#> 2    2 page-002 TRUE [-100.96000 38.3  -97.36000 41.0] 1893304
+#> 3    3 page-003 TRUE [ -97.73333 38.3  -94.13333 41.0] 1893304
 #> ...
 ```
 
@@ -170,7 +170,7 @@ Services that allow it can package their cache for offline use. The export runs
 as an asynchronous job.
 
 ``` r
-job <- export_tiles_job(vts, service_bbox(vts), levels = 0:3)
+job <- export_tiles_job(vts, vts@full_extent, levels = 0:3)
 job_await(job)
 write_tile_package(job, "world.vtpk")
 ```

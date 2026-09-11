@@ -7,7 +7,7 @@ nc <- st_transform(nc, 3857)
 
 ms <- map_server(world_topo_map_url())
 
-tiles <- get_tiles(ms, st_bbox(nc), size = c(1600, 800), progress = FALSE)
+tiles <- get_tiles(ms, nc, size = c(1600, 800), progress = FALSE)
 tiles
 
 basemap <- as_rast(tiles)

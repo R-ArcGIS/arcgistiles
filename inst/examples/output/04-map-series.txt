@@ -1,0 +1,50 @@
+
+> library(arcgistiles)
+
+> census <- map_server(census_url())
+
+> pages <- map_grid(c(-104, 35.6, -94.32, 41), nrow = 2, ncol = 3, crs = 4326)
+
+> pages
+  page row col                            extent
+1    1   1   1 [-104.00000 38.3 -100.77333 41.0]
+2    2   1   2 [-100.77333 38.3  -97.54667 41.0]
+3    3   1   3 [ -97.54667 38.3  -94.32000 41.0]
+4    4   2   1 [-104.00000 35.6 -100.77333 38.3]
+5    5   2   2 [-100.77333 35.6  -97.54667 38.3]
+6    6   2   3 [ -97.54667 35.6  -94.32000 38.3]
+
+> atlas <- map_series(census, pages, size = c(800, 600), progress = FALSE)
+
+> atlas[, c("page", "name", "ok", "extent", "scale")]
+  page     name   ok                            extent   scale
+1    1 page-001 TRUE [-104.18667 38.3 -100.58667 41.0] 1893304
+2    2 page-002 TRUE [-100.96000 38.3  -97.36000 41.0] 1893304
+3    3 page-003 TRUE [ -97.73333 38.3  -94.13333 41.0] 1893304
+4    4 page-004 TRUE [-104.18667 35.6 -100.58667 38.3] 1893304
+5    5 page-005 TRUE [-100.96000 35.6  -97.36000 38.3] 1893304
+6    6 page-006 TRUE [ -97.73333 35.6  -94.13333 38.3] 1893304
+
+> file.size(atlas$path)
+[1] 5495 5268 7702 5791 6503 6654
+
+> padded <- map_grid(
++   c(-104, 35.6, -94.32, 41),
++   nrow = 2,
++   ncol = 2,
++   overlap = 0.05,
++   crs = 4326
++ )
+
+> map_series(
++   census,
++   padded,
++   size = c(400, 300),
++   page_names = c("northwest", "northeast", "southwest", "southeast"),
++   progress = FALSE
++ )[, c("name", "ok", "scale")]
+       name   ok   scale
+1 northwest TRUE 5599973
+2 northeast TRUE 5599973
+3 southwest TRUE 5599973
+4 southeast TRUE 5599973

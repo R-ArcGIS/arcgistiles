@@ -7,7 +7,7 @@ vts <- vector_tile_server(open_street_map_url())
 vts@export_tiles_allowed
 vts@max_export_tiles
 
-job <- export_tiles_job(vts, service_bbox(vts), levels = 0:2)
+job <- export_tiles_job(vts, vts@full_extent, levels = 0:2)
 job
 
 job_await(job, interval = 2, timeout = 600)

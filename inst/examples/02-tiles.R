@@ -2,10 +2,7 @@ library(arcgistiles)
 
 ms <- map_server(world_imagery_url())
 
-bbox <- sf::st_bbox(
-  c(xmin = -71.2, ymin = 42.3, xmax = -71.0, ymax = 42.4),
-  crs = sf::st_crs(4326)
-)
+bbox <- wk::rct(-71.2, 42.3, -71.0, 42.4, crs = 4326)
 
 level_for_size(ms, bbox, c(1024, 1024))
 

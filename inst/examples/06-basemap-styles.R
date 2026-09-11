@@ -7,8 +7,8 @@ table(styles$styleFamily)
 
 basemap_styles("arcgis")[1:8, c("path", "name", "group")]
 
-head(basemap_languages(), 8)
+head(attr(styles, "languages"), 8)
 
-basemap_worldviews()
+attr(styles, "worldviews")
 
-basemap_url()
+nrow(attr(styles, "languages"))
