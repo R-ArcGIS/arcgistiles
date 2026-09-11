@@ -32,7 +32,7 @@ S7::method(print, TileSet) <- function(x, ...) {
 
   cli::cli_text("{.cls TileSet} {ok}/{nrow(x@tiles)} tiles at level {x@level}")
   cli::cli_text("{.strong Format:} {x@format}")
-  cli::cli_text("{.strong CRS:} {x@crs$input %||% 'unknown'}")
+  cli::cli_text("{.strong CRS:} {crs_label(x@crs)}")
 
   invisible(x)
 }
@@ -54,13 +54,11 @@ tileset_bbox <- function(x) {
     cli::cli_abort("No tiles downloaded successfully.")
   }
 
-  sf::st_bbox(
-    c(
-      xmin = min(tiles[["xmin"]]),
-      ymin = min(tiles[["ymin"]]),
-      xmax = max(tiles[["xmax"]]),
-      ymax = max(tiles[["ymax"]])
-    ),
+  rct(
+    min(tiles[["xmin"]]),
+    min(tiles[["ymin"]]),
+    max(tiles[["xmax"]]),
+    max(tiles[["ymax"]]),
     crs = x@crs
   )
 }

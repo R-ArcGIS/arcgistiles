@@ -63,6 +63,7 @@ importFrom(S7,
   prop
 )
 importFrom(arcgisutils,
+  as_bbox,
   compact,
   data_frame,
   rbind_results
@@ -71,4 +72,11 @@ importFrom(s7x,
   class_string,
   new_enum
 )
-importFrom(sf,st_bbox)
+importFrom(wk,
+  rct,
+  rct_xmax,
+  rct_xmin,
+  rct_ymax,
+  rct_ymin,
+  wk_crs
+)

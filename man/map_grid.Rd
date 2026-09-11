@@ -31,8 +31,8 @@ mentioned in error messages as the source of the error. See the
 \code{call} argument of \code{\link[rlang:abort]{abort()}} for more information.}
 }
 \value{
-An \code{sf} data frame with columns \code{page}, \code{row}, \code{col}, and a
-rectangle geometry per page.
+A data frame with columns \code{page}, \code{row}, \code{col}, and \code{extent}, a
+\code{\link[wk:rct]{wk::rct()}} vector of page extents.
 }
 \description{
 Splits \code{bbox} into a regular grid of page extents, the starting point for a

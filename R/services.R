@@ -23,12 +23,12 @@ Service <- S7::new_class(
     url = s7x::class_string,
     metadata = S7::class_list,
     name = s7x::class_string,
-    full_extent = class_bbox,
+    full_extent = class_rct,
     tile_info = S7::new_union(NULL, TileInfo),
     capabilities = S7::class_character,
     token = class_token,
     crs = S7::new_property(
-      getter = function(self) sf::st_crs(self@full_extent)
+      getter = function(self) wk_crs(self@full_extent)
     )
   )
 )
@@ -217,7 +217,7 @@ service_extent <- function(meta, call = rlang::caller_env()) {
 
   extent[["spatialReference"]] <- candidates[[richest]]
 
-  arcgisutils::from_envelope(extent, error_call = call)
+  as_bbox(arcgisutils::from_envelope(extent, error_call = call))
 }
 
 split_capabilities <- function(x) {
@@ -231,7 +231,7 @@ split_capabilities <- function(x) {
 S7::method(print, Service) <- function(x, ...) {
   cli::cli_text("{.cls {class(x)[1]}} {.val {x@name}}")
   cli::cli_text("{.url {x@url}}")
-  cli::cli_text("{.strong CRS:} {x@crs$input %||% 'unknown'}")
+  cli::cli_text("{.strong CRS:} {crs_label(x@crs)}")
 
   if (length(x@capabilities) > 0L) {
     cli::cli_text("{.strong Capabilities:} {.val {x@capabilities}}")

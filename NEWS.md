@@ -1,6 +1,12 @@
 # arcgistiles 0.1.0
 
 * Initial release.
+* Extents are [wk::rct()] vectors throughout, and CRSs are read with
+  [wk::wk_crs()]. `wk` is the substrate GeoArrow builds on, so the types carry
+  over when the bridge moves to Arrow.
+* Coercion and requests come from `arcgisutils`: `as_bbox()`,
+  `fetch_layer_metadata()`, `from_envelope()`, `from_spatial_reference()`,
+  `validate_crs()`, `rbind_results()`, and `data_frame()`.
 
 ## Services
 

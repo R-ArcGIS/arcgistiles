@@ -165,7 +165,7 @@ estimate_export_tiles_size <- function(
 }
 
 submit_tile_job <- function(x, operation, query, call = rlang::caller_env()) {
-  res <- arc_get(x@url, x@token, path = operation, query = query, call = call)
+  res <- arcgisutils::fetch_layer_metadata(x@url, x@token, path = operation, query = query, call = call)
 
   job_id <- res[["jobId"]]
 
@@ -222,7 +222,7 @@ job_messages <- function(job, error_call = rlang::caller_env()) {
 }
 
 job_info <- function(job, call = rlang::caller_env()) {
-  arc_get(job@url, job@token, path = c("jobs", job@job_id), call = call)
+  arcgisutils::fetch_layer_metadata(job@url, job@token, path = c("jobs", job@job_id), call = call)
 }
 
 #' Wait for a tile export job
@@ -306,7 +306,7 @@ job_result <- function(
     return(output)
   }
 
-  res <- arc_get(
+  res <- arcgisutils::fetch_layer_metadata(
     job@url,
     job@token,
     path = c("exportTiles", "jobs", job@job_id, "results", param),
@@ -408,10 +408,10 @@ export_extent <- function(bbox, x, call = rlang::caller_env()) {
     return(NULL)
   }
 
-  bbox <- as_bbox(bbox, x@crs, call = call)
+  bbox <- as_bbox(bbox, x@crs, error_call = call)
 
   yyjsonr::write_json_str(
-    arcgisutils::as_extent(bbox, call = call),
+    arcgisutils::as_extent(sf::st_bbox(bbox), call = call),
     auto_unbox = TRUE
   )
 }

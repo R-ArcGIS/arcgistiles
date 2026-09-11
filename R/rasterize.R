@@ -35,7 +35,16 @@ S7::method(as_rast, TileSet) <- function(x, ...) {
   }
 
   rasters <- lapply(seq_len(nrow(tiles)), function(i) {
-    georeference(tiles[["path"]][i], unlist(tiles[i, c("xmin", "xmax", "ymin", "ymax")]), x@crs)
+    georeference(
+      tiles[["path"]][i],
+      rct(
+        tiles[["xmin"]][i],
+        tiles[["ymin"]][i],
+        tiles[["xmax"]][i],
+        tiles[["ymax"]][i]
+      ),
+      x@crs
+    )
   })
 
   out <- if (length(rasters) == 1L) {
@@ -50,8 +59,14 @@ S7::method(as_rast, TileSet) <- function(x, ...) {
 georeference <- function(path, ext, crs) {
   r <- suppressWarnings(terra::rast(path))
 
-  terra::ext(r) <- terra::ext(ext[["xmin"]], ext[["xmax"]], ext[["ymin"]], ext[["ymax"]])
-  terra::crs(r) <- if (is.na(crs)) "" else crs[["wkt"]]
+  terra::ext(r) <- terra::ext(
+    rct_xmin(ext),
+    rct_xmax(ext),
+    rct_ymin(ext),
+    rct_ymax(ext)
+  )
+
+  terra::crs(r) <- sf::st_crs(crs)$wkt %||% ""
 
   r
 }

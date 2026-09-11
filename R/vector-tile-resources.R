@@ -18,7 +18,7 @@ NULL
 #' }
 vector_tile_style <- function(x, error_call = rlang::caller_env()) {
   path <- strsplit(x@default_styles, "/", fixed = TRUE)[[1L]]
-  style <- arc_get(x@url, x@token, path = path, call = error_call)
+  style <- arcgisutils::fetch_layer_metadata(x@url, x@token, path = path, call = error_call)
 
   # the style document sits at <default_styles>/root.json, so its siblings
   # resolve against that directory, and url_modify_relative() percent encodes
@@ -56,7 +56,7 @@ vector_tile_style <- function(x, error_call = rlang::caller_env()) {
 #' vector_tile_resources(vector_tile_server(open_street_map_url()))
 #' }
 vector_tile_resources <- function(x, error_call = rlang::caller_env()) {
-  res <- arc_get(x@url, x@token, path = c("resources", "info"), call = error_call)
+  res <- arcgisutils::fetch_layer_metadata(x@url, x@token, path = c("resources", "info"), call = error_call)
 
   as.character(res[["resourceInfo"]])
 }
@@ -210,7 +210,7 @@ tilemap <- function(
   check_number_whole(width, min = 1, call = error_call)
   check_number_whole(height, min = 1, call = error_call)
 
-  res <- arc_get(
+  res <- arcgisutils::fetch_layer_metadata(
     x@url,
     x@token,
     path = c(

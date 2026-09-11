@@ -27,8 +27,8 @@ test_that("decoded features fall inside the tiles they came from", {
   bbox <- sf::st_bbox(parts[[1L]])
   extent <- tileset_bbox(tiles)
 
-  expect_gte(bbox[["xmin"]], extent[["xmin"]] - 1)
-  expect_lte(bbox[["xmax"]], extent[["xmax"]] + 1)
+  expect_gte(wk::rct_xmin(bbox), wk::rct_xmin(extent) - 1)
+  expect_lte(wk::rct_xmax(bbox), wk::rct_xmax(extent) + 1)
   expect_equal(sf::st_crs(parts[[1L]]), sf::st_crs(3857))
 })
 

@@ -23,7 +23,7 @@ basemap_api <- "https://basemapstyles-api.arcgis.com/arcgis/rest/services/styles
 #' attr(styles, "languages")
 #' }
 basemap_styles <- function(family = NULL, error_call = rlang::caller_env()) {
-  self <- arc_get(
+  self <- arcgisutils::fetch_layer_metadata(
     basemap_api,
     path = c("styles", "self"),
     call = error_call
@@ -138,7 +138,7 @@ basemap_document <- function(
     style <- paste0(as.character(style_family(as.character(family))), "/", style)
   }
 
-  arc_get(
+  arcgisutils::fetch_layer_metadata(
     basemap_api,
     token,
     path = c(kind, strsplit(style, "/", fixed = TRUE)[[1L]]),
@@ -224,7 +224,7 @@ basemap_session <- function(
 ) {
   check_number_whole(duration, min = 1, call = error_call)
 
-  arc_get(
+  arcgisutils::fetch_layer_metadata(
     basemap_api,
     token,
     path = c("sessions", "start"),

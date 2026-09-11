@@ -26,9 +26,9 @@ map_series(
 \arguments{
 \item{x}{A \link{MapServer}.}
 
-\item{pages}{An \code{sf} object, an \code{sfc}, a list of \code{bbox} objects, or a data
-frame with \code{xmin}, \code{ymin}, \code{xmax}, and \code{ymax} columns. One image is
-exported per row or feature.}
+\item{pages}{A \code{\link[wk:rct]{wk::rct()}}, a data frame with an \code{extent} column or with
+\code{xmin}, \code{ymin}, \code{xmax}, and \code{ymax} columns, or any geometry
+\code{\link[wk:wk_envelope]{wk::wk_envelope()}} understands. One image is exported per page.}
 
 \item{size}{Integer. Length two \code{c(width, height)} in pixels.}
 
@@ -66,8 +66,7 @@ mentioned in error messages as the source of the error. See the
 }
 \value{
 A data frame with one row per page and columns \code{page}, \code{name},
-\code{path}, \code{ok}, \code{xmin}, \code{ymin}, \code{xmax}, \code{ymax}, and \code{scale}. The extents are
-the ones the server rendered.
+\code{path}, \code{ok}, \code{extent}, and \code{scale}. \code{extent} is what the server drew.
 }
 \description{
 Exports one image per page extent, the equivalent of a map series or

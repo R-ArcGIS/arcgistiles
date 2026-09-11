@@ -22,9 +22,9 @@ test_that("a tile's own extent round trips to exactly that tile", {
 
   bbox <- sf::st_bbox(
     c(
-      xmin = extent[["xmin"]],
+      xmin = wk::rct_xmin(extent),
       ymin = extent[["ymin"]],
-      xmax = extent[["xmax"]],
+      xmax = wk::rct_xmax(extent),
       ymax = extent[["ymax"]]
     ),
     crs = sf::st_crs(3857)

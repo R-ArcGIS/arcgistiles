@@ -48,10 +48,7 @@ tiles an extent needs before fetching anything. A bounding box in any CRS is
 reprojected into the service's own.
 
 ``` r
-bbox <- sf::st_bbox(
-  c(xmin = -71.2, ymin = 42.3, xmax = -71.0, ymax = 42.4),
-  crs = sf::st_crs(4326)
-)
+bbox <- wk::rct(-71.2, 42.3, -71.0, 42.4, crs = 4326)
 
 tile_grid(ms, bbox, 12L)[1:3, ]
 #>   level  row  col     xmin    ymin     xmax    ymax

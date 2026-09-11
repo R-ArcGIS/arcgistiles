@@ -59,7 +59,7 @@ S7::method(print, TileInfo) <- function(x, ...) {
   levels <- x@lods[["level"]]
 
   cli::cli_text("{.cls TileInfo} {x@cols}x{x@rows} {x@format} at {x@dpi} dpi")
-  cli::cli_text("{.strong CRS:} {x@crs$input %||% 'unknown'}")
+  cli::cli_text("{.strong CRS:} {crs_label(x@crs)}")
   cli::cli_text("{.strong Origin:} {.val {x@origin}}")
   cli::cli_text(
     "{.strong Levels:} {min(levels)}-{max(levels)} ({length(levels)} lods)"
@@ -189,14 +189,14 @@ level_for_size <- function(
   error_call = rlang::caller_env()
 ) {
   info <- tile_info(x)
-  bbox <- as_bbox(bbox, info@crs, call = error_call)
+  bbox <- as_bbox(bbox, info@crs, error_call = error_call)
   size <- check_size(size, call = error_call)
 
   level_for_resolution(
     info,
     max(
-      (bbox[["xmax"]] - bbox[["xmin"]]) / size[1L],
-      (bbox[["ymax"]] - bbox[["ymin"]]) / size[2L]
+      (rct_xmax(bbox) - rct_xmin(bbox)) / size[1L],
+      (rct_ymax(bbox) - rct_ymin(bbox)) / size[2L]
     ),
     error_call = error_call
   )
@@ -284,7 +284,7 @@ tile_grid <- function(x, bbox, level, error_call = rlang::caller_env()) {
   check_number_whole(level, call = error_call)
 
   level <- as.integer(level)
-  bbox <- as_bbox(bbox, info@crs, call = error_call)
+  bbox <- as_bbox(bbox, info@crs, error_call = error_call)
 
   resolution <- info@lods[["resolution"]][lod_index(info, level, error_call)]
 
@@ -292,14 +292,14 @@ tile_grid <- function(x, bbox, level, error_call = rlang::caller_env()) {
   height <- resolution * info@rows
 
   cols <- span_indices(
-    bbox[["xmin"]] - info@origin[1L],
-    bbox[["xmax"]] - info@origin[1L],
+    rct_xmin(bbox) - info@origin[1L],
+    rct_xmax(bbox) - info@origin[1L],
     width
   )
 
   rows <- span_indices(
-    info@origin[2L] - bbox[["ymax"]],
-    info@origin[2L] - bbox[["ymin"]],
+    info@origin[2L] - rct_ymax(bbox),
+    info@origin[2L] - rct_ymin(bbox),
     height
   )
 

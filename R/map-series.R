@@ -12,8 +12,8 @@ NULL
 #'   adjacent pages share a margin. `0.05` adds 5 percent on every side.
 #' @param crs Coordinate reference system of the pages. Defaults to the CRS of
 #'   `bbox`.
-#' @returns An `sf` data frame with columns `page`, `row`, `col`, and a
-#'   rectangle geometry per page.
+#' @returns A data frame with columns `page`, `row`, `col`, and `extent`, a
+#'   [wk::rct()] vector of page extents.
 #' @family map series
 #' @export
 #' @examples
@@ -30,39 +30,28 @@ map_grid <- function(
   check_number_whole(ncol, min = 1, call = error_call)
   check_number_decimal(overlap, min = 0, call = error_call)
 
-  bbox <- as_bbox(bbox, crs, call = error_call)
+  bbox <- as_bbox(bbox, crs, error_call = error_call)
 
-  width <- (bbox[["xmax"]] - bbox[["xmin"]]) / ncol
-  height <- (bbox[["ymax"]] - bbox[["ymin"]]) / nrow
+  width <- (rct_xmax(bbox) - rct_xmin(bbox)) / ncol
+  height <- (rct_ymax(bbox) - rct_ymin(bbox)) / nrow
 
   grid <- expand.grid(col = seq_len(ncol), row = seq_len(nrow))
 
-  xmin <- bbox[["xmin"]] + (grid[["col"]] - 1L) * width
-  ymax <- bbox[["ymax"]] - (grid[["row"]] - 1L) * height
+  xmin <- rct_xmin(bbox) + (grid[["col"]] - 1L) * width
+  ymax <- rct_ymax(bbox) - (grid[["row"]] - 1L) * height
 
-  pages <- data.frame(
+  data_frame(data.frame(
     page = seq_len(nrow(grid)),
     row = grid[["row"]],
     col = grid[["col"]],
-    xmin = xmin - width * overlap,
-    ymin = ymax - height - height * overlap,
-    xmax = xmin + width + width * overlap,
-    ymax = ymax + height * overlap
-  )
-
-  boxes <- lapply(seq_len(nrow(pages)), function(i) {
-    sf::st_as_sfc(sf::st_bbox(c(
-      xmin = pages[["xmin"]][i],
-      ymin = pages[["ymin"]][i],
-      xmax = pages[["xmax"]][i],
-      ymax = pages[["ymax"]][i]
-    )))[[1L]]
-  })
-
-  sf::st_sf(
-    pages[, c("page", "row", "col")],
-    geometry = sf::st_sfc(boxes, crs = sf::st_crs(bbox))
-  )
+    extent = rct(
+      xmin - width * overlap,
+      ymax - height - height * overlap,
+      xmin + width + width * overlap,
+      ymax + height * overlap,
+      crs = wk_crs(bbox)
+    )
+  ))
 }
 
 #' Export a series of map images
@@ -71,9 +60,9 @@ map_grid <- function(
 #' data driven pages. Requests run in parallel.
 #'
 #' @inheritParams export_map
-#' @param pages An `sf` object, an `sfc`, a list of `bbox` objects, or a data
-#'   frame with `xmin`, `ymin`, `xmax`, and `ymax` columns. One image is
-#'   exported per row or feature.
+#' @param pages A [wk::rct()], a data frame with an `extent` column or with
+#'   `xmin`, `ymin`, `xmax`, and `ymax` columns, or any geometry
+#'   [wk::wk_envelope()] understands. One image is exported per page.
 #' @param dir String. Directory to write images into. Created if needed.
 #' @param page_names Character. File name stems, one per page. Defaults to
 #'   `page-001`, `page-002`, and so on.
@@ -81,8 +70,7 @@ map_grid <- function(
 #' @param margin Double. Fraction to expand each page extent by before
 #'   exporting.
 #' @returns A data frame with one row per page and columns `page`, `name`,
-#'   `path`, `ok`, `xmin`, `ymin`, `xmax`, `ymax`, and `scale`. The extents are
-#'   the ones the server rendered.
+#'   `path`, `ok`, `extent`, and `scale`. `extent` is what the server drew.
 #' @family map series
 #' @export
 #' @examples
@@ -117,16 +105,11 @@ map_series <- function(
   format <- as.character(image_format(as.character(format)))
   size <- check_size(size, call = error_call)
 
-  extents <- if (inherits(pages, "bbox")) {
-    list(pages)
-  } else if (inherits(pages, c("sf", "sfc"))) {
-    geometry <- sf::st_geometry(pages)
-    page_crs <- sf::st_crs(geometry)
-
-    lapply(seq_along(geometry), function(i) {
-      sf::st_bbox(geometry[i], crs = page_crs)
-    })
-  } else if (is.data.frame(pages)) {
+  extents <- if (inherits(pages, "wk_rct")) {
+    pages
+  } else if (is.data.frame(pages) && "extent" %in% base::names(pages)) {
+    pages[["extent"]]
+  } else if (is.data.frame(pages) && !inherits(pages, "sf")) {
     missing <- setdiff(c("xmin", "ymin", "xmax", "ymax"), base::names(pages))
 
     if (length(missing) > 0L) {
@@ -136,35 +119,38 @@ map_series <- function(
       )
     }
 
-    lapply(seq_len(nrow(pages)), function(i) {
-      sf::st_bbox(c(
-        xmin = pages[["xmin"]][i],
-        ymin = pages[["ymin"]][i],
-        xmax = pages[["xmax"]][i],
-        ymax = pages[["ymax"]][i]
-      ))
-    })
-  } else if (is.list(pages)) {
-    lapply(pages, as_bbox, call = error_call)
+    rct(
+      pages[["xmin"]],
+      pages[["ymin"]],
+      pages[["xmax"]],
+      pages[["ymax"]]
+    )
   } else {
-    cli::cli_abort(
-      "{.arg pages} must be an {.cls sf}, a data frame of extents, or a list of {.cls bbox}.",
-      call = error_call
+    rlang::try_fetch(
+      wk::wk_envelope(pages),
+      error = function(cnd) {
+        cli::cli_abort(
+          c(
+            "{.arg pages} must be a {.cls wk_rct}, a data frame of extents, or a geometry.",
+            "i" = "{.cls {class(pages)[1]}} has no per feature extent."
+          ),
+          call = error_call
+        )
+      }
     )
   }
 
   if (margin > 0) {
-    extents <- lapply(extents, function(bbox) {
-      width <- (bbox[["xmax"]] - bbox[["xmin"]]) * margin
-      height <- (bbox[["ymax"]] - bbox[["ymin"]]) * margin
+    width <- (rct_xmax(extents) - rct_xmin(extents)) * margin
+    height <- (rct_ymax(extents) - rct_ymin(extents)) * margin
 
-      bbox[["xmin"]] <- bbox[["xmin"]] - width
-      bbox[["xmax"]] <- bbox[["xmax"]] + width
-      bbox[["ymin"]] <- bbox[["ymin"]] - height
-      bbox[["ymax"]] <- bbox[["ymax"]] + height
-
-      bbox
-    })
+    extents <- rct(
+      rct_xmin(extents) - width,
+      rct_ymin(extents) - height,
+      rct_xmax(extents) + width,
+      rct_ymax(extents) + height,
+      crs = wk_crs(extents)
+    )
   }
 
   n <- length(extents)
@@ -195,7 +181,10 @@ map_series <- function(
     list(...)
   ))
 
-  reqs <- lapply(extents, function(bbox) {
+  # a wk_rct is a record vector, so iterate positions rather than its fields
+  reqs <- lapply(seq_along(extents), function(i) {
+    bbox <- extents[i]
+
     arcgisutils::arc_base_req(
       x@url,
       x@token,
@@ -230,12 +219,12 @@ map_series <- function(
   downloaded <- !is.na(hrefs)
   downloaded[downloaded] <- ok
 
-  extents <- lapply(results, function(r) {
+  drawn <- lapply(results, function(r) {
     if (is.null(r[["extent"]])) {
       return(rep(NA_real_, 4L))
     }
 
-    as.double(arcgisutils::from_envelope(r[["extent"]]))
+    unname(as.double(arcgisutils::from_envelope(r[["extent"]])))
   })
 
   data_frame(data.frame(
@@ -243,10 +232,13 @@ map_series <- function(
     name = page_names,
     path = ifelse(downloaded, paths, NA_character_),
     ok = downloaded,
-    xmin = vapply(extents, `[`, double(1), 1L),
-    ymin = vapply(extents, `[`, double(1), 2L),
-    xmax = vapply(extents, `[`, double(1), 3L),
-    ymax = vapply(extents, `[`, double(1), 4L),
+    extent = rct(
+      vapply(drawn, `[`, double(1), 1L),
+      vapply(drawn, `[`, double(1), 2L),
+      vapply(drawn, `[`, double(1), 3L),
+      vapply(drawn, `[`, double(1), 4L),
+      crs = wk_crs(extents)
+    ),
     scale = vapply(
       results,
       function(r) as.double(r[["scale"]] %||% NA_real_),

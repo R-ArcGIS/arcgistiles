@@ -23,6 +23,7 @@ Imports:
     S7 (>= 0.2.0),
     s7x,
     vctrs,
+    wk,
     sf,
     yyjsonr
 Suggests:

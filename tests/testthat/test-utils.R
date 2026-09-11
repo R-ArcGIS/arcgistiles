@@ -1,36 +1,3 @@
-test_that("a length four numeric becomes a bbox", {
-  bbox <- arcgistiles:::as_bbox(c(0, 1, 2, 3))
-
-  expect_s3_class(bbox, "bbox")
-  expect_equal(unname(as.double(bbox)), c(0, 1, 2, 3))
-})
-
-test_that("a bbox with no crs takes the one it is given", {
-  bbox <- arcgistiles:::as_bbox(c(0, 1, 2, 3), sf::st_crs(3857))
-
-  expect_equal(sf::st_crs(bbox), sf::st_crs(3857))
-  expect_equal(unname(as.double(bbox)), c(0, 1, 2, 3))
-})
-
-test_that("a bbox in another crs is transformed", {
-  bbox <- sf::st_bbox(c(xmin = -1, ymin = -1, xmax = 1, ymax = 1), crs = sf::st_crs(4326))
-  out <- arcgistiles:::as_bbox(bbox, sf::st_crs(3857))
-
-  expect_equal(sf::st_crs(out), sf::st_crs(3857))
-  expect_true(abs(out[["xmin"]]) > 100000)
-})
-
-test_that("an sf object supplies its own bounding box", {
-  point <- sf::st_sfc(sf::st_point(c(0, 0)), crs = sf::st_crs(4326))
-
-  expect_s3_class(arcgistiles:::as_bbox(point), "bbox")
-})
-
-test_that("a malformed bbox is an error", {
-  expect_error(arcgistiles:::as_bbox("nope"), "bbox")
-  expect_error(arcgistiles:::as_bbox(c(1, 2, 3)), "bbox")
-})
-
 test_that("size must be two positive numbers", {
   expect_equal(arcgistiles:::check_size(c(10, 20)), c(10L, 20L))
   expect_equal(arcgistiles:::check_size(c(10.4, 20.6)), c(10L, 21L))

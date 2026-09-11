@@ -35,7 +35,7 @@ test_that("a service bounding box carries its crs", {
 
   bbox <- map_server(world_imagery_url())@full_extent
 
-  expect_s3_class(bbox, "bbox")
+  expect_s3_class(bbox, "wk_rct")
   expect_false(is.na(sf::st_crs(bbox)))
 })
 

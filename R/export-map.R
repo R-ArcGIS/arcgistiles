@@ -20,20 +20,20 @@ MapImage <- S7::new_class(
   package = "arcgistiles",
   properties = list(
     path = s7x::class_string,
-    bbox = class_bbox,
+    bbox = class_rct,
     size = S7::class_integer,
     format = s7x::class_string,
     scale = s7x::class_float,
     crs = S7::new_property(
-      getter = function(self) sf::st_crs(self@bbox)
+      getter = function(self) wk_crs(self@bbox)
     )
   )
 )
 
 S7::method(print, MapImage) <- function(x, ...) {
   cli::cli_text("{.cls MapImage} {x@size[1]}x{x@size[2]} {x@format}")
-  cli::cli_text("{.strong CRS:} {x@crs$input %||% 'unknown'}")
-  cli::cli_text("{.strong Extent:} {.val {as.double(x@bbox)}}")
+  cli::cli_text("{.strong CRS:} {crs_label(x@crs)}")
+  cli::cli_text("{.strong Extent:} {.val {unlist(unclass(x@bbox))}}")
   cli::cli_text("{.file {x@path}}")
 
   invisible(x)
@@ -118,7 +118,7 @@ export_map <- function(
     list(...)
   ))
 
-  res <- arc_get(
+  res <- arcgisutils::fetch_layer_metadata(
     x@url,
     x@token,
     path = "export",
@@ -143,7 +143,7 @@ export_map <- function(
 
   MapImage(
     path = file,
-    bbox = arcgisutils::from_envelope(res[["extent"]], error_call = error_call),
+    bbox = as_bbox(arcgisutils::from_envelope(res[["extent"]], error_call = error_call)),
     size = c(as.integer(res[["width"]]), as.integer(res[["height"]])),
     format = format,
     scale = as.double(res[["scale"]] %||% NA_real_)
@@ -151,12 +151,12 @@ export_map <- function(
 }
 
 bbox_query <- function(bbox, call = rlang::caller_env()) {
-  bbox <- as_bbox(bbox, call = call)
+  bbox <- as_bbox(bbox, error_call = call)
 
   list(
-    bbox = toString(as.double(bbox)),
+    bbox = toString(unlist(unclass(bbox))),
     bboxSR = arcgisutils::validate_crs(
-      sf::st_crs(bbox),
+      wk_crs(bbox),
       call = call
     )[["spatialReference"]][["wkid"]]
   )

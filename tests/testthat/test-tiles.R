@@ -18,9 +18,9 @@ test_that("a tile set bounding box covers every tile", {
   tiles <- get_tiles(service, service@full_extent, level = 1L, progress = FALSE)
   bbox <- tileset_bbox(tiles)
 
-  expect_s3_class(bbox, "bbox")
-  expect_equal(bbox[["xmin"]], min(tiles@tiles[["xmin"]]))
-  expect_equal(bbox[["ymax"]], max(tiles@tiles[["ymax"]]))
+  expect_s3_class(bbox, "wk_rct")
+  expect_equal(wk::rct_xmin(bbox), min(tiles@tiles[["xmin"]]))
+  expect_equal(wk::rct_ymax(bbox), max(tiles@tiles[["ymax"]]))
 })
 
 test_that("tiles become a georeferenced raster", {

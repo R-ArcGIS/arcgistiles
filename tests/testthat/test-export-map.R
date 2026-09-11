@@ -9,10 +9,10 @@ test_that("an exported image reports the extent the server drew", {
   expect_true(file.exists(image@path))
   expect_true(file.size(image@path) > 0)
 
-  expect_equal(unname(image@bbox[["xmin"]]), -104)
-  expect_equal(unname(image@bbox[["xmax"]]), -94.32)
-  expect_true(image@bbox[["ymin"]] < 35.6)
-  expect_true(image@bbox[["ymax"]] > 41)
+  expect_equal(unname(wk::rct_xmin(image@bbox)), -104)
+  expect_equal(unname(wk::rct_xmax(image@bbox)), -94.32)
+  expect_true(wk::rct_ymin(image@bbox) < 35.6)
+  expect_true(wk::rct_ymax(image@bbox) > 41)
 })
 
 test_that("an exported image becomes a georeferenced raster", {
@@ -26,7 +26,7 @@ test_that("an exported image becomes a georeferenced raster", {
   expect_s4_class(raster, "SpatRaster")
   expect_equal(terra::ncol(raster), 300L)
   expect_equal(terra::nrow(raster), 200L)
-  expect_equal(unname(as.vector(terra::ext(raster))[["xmin"]]), unname(image@bbox[["xmin"]]))
+  expect_equal(unname(as.vector(terra::ext(raster))[["xmin"]]), unname(wk::rct_xmin(image@bbox)))
 })
 
 test_that("layers and definition expressions reach the service", {

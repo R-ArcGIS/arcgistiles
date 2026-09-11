@@ -1,30 +1,40 @@
-test_that("a grid has one page per cell and tiles the extent", {
+test_that("a grid has one page per cell and covers the extent", {
   pages <- map_grid(c(0, 0, 10, 10), nrow = 2L, ncol = 5L, crs = 3857)
 
-  expect_s3_class(pages, "sf")
+  expect_s3_class(pages[["extent"]], "wk_rct")
   expect_equal(nrow(pages), 10L)
   expect_equal(pages[["page"]], 1:10)
-  expect_equal(unname(as.double(sf::st_bbox(pages))), c(0, 0, 10, 10))
+  expect_equal(
+    unname(unlist(unclass(wk::wk_bbox(pages[["extent"]])))),
+    c(0, 0, 10, 10)
+  )
+  expect_true(wk::wk_crs_equal(wk::wk_crs(pages[["extent"]]), 3857))
 })
 
 test_that("overlap grows each page beyond its cell", {
-  plain <- map_grid(c(0, 0, 10, 10), nrow = 2L, ncol = 2L, crs = 3857)
-  padded <- map_grid(c(0, 0, 10, 10), nrow = 2L, ncol = 2L, overlap = 0.1, crs = 3857)
+  plain <- map_grid(c(0, 0, 10, 10), nrow = 2L, ncol = 2L, crs = 3857)[["extent"]]
+  padded <- map_grid(
+    c(0, 0, 10, 10),
+    nrow = 2L,
+    ncol = 2L,
+    overlap = 0.1,
+    crs = 3857
+  )[["extent"]]
 
-  expect_true(all(sf::st_area(padded) > sf::st_area(plain)))
+  expect_true(all(wk::rct_width(padded) > wk::rct_width(plain)))
+  expect_true(all(wk::rct_height(padded) > wk::rct_height(plain)))
 })
 
 test_that("pages read in reading order", {
   pages <- map_grid(c(0, 0, 10, 10), nrow = 2L, ncol = 2L, crs = 3857)
+  extent <- pages[["extent"]]
 
   expect_equal(pages[["row"]], c(1L, 1L, 2L, 2L))
   expect_equal(pages[["col"]], c(1L, 2L, 1L, 2L))
 
-  centroids <- sf::st_coordinates(sf::st_centroid(sf::st_geometry(pages)))
-  expect_true(centroids[1L, "Y"] > centroids[3L, "Y"])
-  expect_true(centroids[1L, "X"] < centroids[2L, "X"])
+  expect_true(wk::rct_ymin(extent)[1L] > wk::rct_ymin(extent)[3L])
+  expect_true(wk::rct_xmin(extent)[1L] < wk::rct_xmin(extent)[2L])
 })
-
 
 test_that("pages come from a data frame of extents as well as an sf", {
   skip_if_no_network()
