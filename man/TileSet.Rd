@@ -51,6 +51,7 @@ one.
 Other tiles:
 \code{\link[=as_rast]{as_rast()}},
 \code{\link[=get_tiles]{get_tiles()}},
+\code{\link[=tilemap]{tilemap()}},
 \code{\link[=tileset_bbox]{tileset_bbox()}}
 }
 \concept{tiles}

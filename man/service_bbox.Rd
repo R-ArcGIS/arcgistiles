@@ -25,6 +25,7 @@ Other services:
 \code{\link[=MapServer]{MapServer()}},
 \code{\link[=Service]{Service()}},
 \code{\link[=VectorTileServer]{VectorTileServer()}},
+\code{\link{known-services}},
 \code{\link[=map_server]{map_server()}},
 \code{\link[=vector_tile_server]{vector_tile_server()}}
 }

@@ -34,6 +34,7 @@ Other services:
 \code{\link[=MapServer]{MapServer()}},
 \code{\link[=Service]{Service()}},
 \code{\link[=VectorTileServer]{VectorTileServer()}},
+\code{\link{known-services}},
 \code{\link[=map_server]{map_server()}},
 \code{\link[=service_bbox]{service_bbox()}}
 }

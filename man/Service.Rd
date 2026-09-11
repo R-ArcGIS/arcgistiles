@@ -48,6 +48,7 @@ Abstract parent of \link{MapServer} and \link{VectorTileServer}.
 Other services:
 \code{\link[=MapServer]{MapServer()}},
 \code{\link[=VectorTileServer]{VectorTileServer()}},
+\code{\link{known-services}},
 \code{\link[=map_server]{map_server()}},
 \code{\link[=service_bbox]{service_bbox()}},
 \code{\link[=vector_tile_server]{vector_tile_server()}}

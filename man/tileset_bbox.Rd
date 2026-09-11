@@ -24,6 +24,7 @@ tileset_bbox(get_tiles(map_server(world_imagery_url()), bbox, 6L))
 Other tiles:
 \code{\link[=TileSet]{TileSet()}},
 \code{\link[=as_rast]{as_rast()}},
-\code{\link[=get_tiles]{get_tiles()}}
+\code{\link[=get_tiles]{get_tiles()}},
+\code{\link[=tilemap]{tilemap()}}
 }
 \concept{tiles}

@@ -51,6 +51,7 @@ get_tiles(ms, service_bbox(ms), level = 3L)
 Other tiles:
 \code{\link[=TileSet]{TileSet()}},
 \code{\link[=as_rast]{as_rast()}},
+\code{\link[=tilemap]{tilemap()}},
 \code{\link[=tileset_bbox]{tileset_bbox()}}
 }
 \concept{tiles}

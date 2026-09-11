@@ -46,4 +46,12 @@ vts <- vector_tile_server(open_street_map_url())
 get_vector_tiles(vts, service_bbox(vts), level = 3L)
 }
 }
+\seealso{
+Other vector tiles:
+\code{\link[=vector_tile_font]{vector_tile_font()}},
+\code{\link[=vector_tile_fonts]{vector_tile_fonts()}},
+\code{\link[=vector_tile_resources]{vector_tile_resources()}},
+\code{\link[=vector_tile_sprite]{vector_tile_sprite()}},
+\code{\link[=vector_tile_style]{vector_tile_style()}}
+}
 \concept{vector tiles}

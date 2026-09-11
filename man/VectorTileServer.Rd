@@ -60,6 +60,7 @@ A \code{VectorTileServer} endpoint. Use \code{\link[=vector_tile_server]{vector_
 Other services:
 \code{\link[=MapServer]{MapServer()}},
 \code{\link[=Service]{Service()}},
+\code{\link{known-services}},
 \code{\link[=map_server]{map_server()}},
 \code{\link[=service_bbox]{service_bbox()}},
 \code{\link[=vector_tile_server]{vector_tile_server()}}

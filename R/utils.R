@@ -42,7 +42,7 @@ as_crs <- function(x, call = rlang::caller_env()) {
 #' @importFrom sf st_bbox
 as_tile_bbox <- function(bbox, crs = NULL, call = rlang::caller_env()) {
   if (!inherits(bbox, "bbox")) {
-    if (!is.numeric(bbox) || length(bbox) != 4L) {
+    if (!is.numeric(bbox)) {
       bbox <- tryCatch(
         sf::st_bbox(bbox),
         error = function(e) {
@@ -51,6 +51,11 @@ as_tile_bbox <- function(bbox, crs = NULL, call = rlang::caller_env()) {
             call = call
           )
         }
+      )
+    } else if (length(bbox) != 4L) {
+      cli::cli_abort(
+        "{.arg bbox} must be a {.cls bbox} or a length four numeric.",
+        call = call
       )
     } else {
       bbox <- sf::st_bbox(
