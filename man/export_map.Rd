@@ -74,7 +74,6 @@ export_map(ms, c(-104, 35.6, -94.32, 41), size = c(600, 400))
 }
 \seealso{
 Other map images:
-\code{\link[=MapImage]{MapImage()}},
-\code{\link[=image_bbox]{image_bbox()}}
+\code{\link[=MapImage]{MapImage()}}
 }
 \concept{map images}

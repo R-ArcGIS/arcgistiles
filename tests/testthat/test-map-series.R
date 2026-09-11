@@ -25,28 +25,49 @@ test_that("pages read in reading order", {
   expect_true(centroids[1L, "X"] < centroids[2L, "X"])
 })
 
-test_that("page extents come from every supported input", {
-  pages <- map_grid(c(0, 0, 10, 10), nrow = 1L, ncol = 2L, crs = 3857)
 
-  from_sf <- arcgistiles:::page_bboxes(pages)
-  from_df <- arcgistiles:::page_bboxes(
-    data.frame(xmin = c(0, 5), ymin = 0, xmax = c(5, 10), ymax = 10)
+test_that("pages come from a data frame of extents as well as an sf", {
+  skip_if_no_network()
+
+  service <- map_server(census_url())
+  extents <- data.frame(
+    xmin = c(-104, -100),
+    ymin = 35.6,
+    xmax = c(-100, -96),
+    ymax = 41
   )
-  from_list <- arcgistiles:::page_bboxes(list(c(0, 0, 5, 10), c(5, 0, 10, 10)))
 
-  expect_length(from_sf, 2L)
-  expect_length(from_df, 2L)
-  expect_length(from_list, 2L)
-  expect_s3_class(from_sf[[1L]], "bbox")
+  atlas <- map_series(service, extents, size = c(200L, 200L), progress = FALSE)
+
+  expect_equal(nrow(atlas), 2L)
+  expect_true(all(atlas[["ok"]]))
 })
 
 test_that("a data frame without extent columns is an error", {
-  expect_error(arcgistiles:::page_bboxes(data.frame(a = 1)), "missing")
+  skip_if_no_network()
+
+  service <- map_server(census_url())
+
+  expect_error(
+    map_series(service, data.frame(a = 1), progress = FALSE),
+    "missing"
+  )
 })
 
-test_that("margin expands a page symmetrically", {
-  bbox <- sf::st_bbox(c(xmin = 0, ymin = 0, xmax = 10, ymax = 10), crs = sf::st_crs(3857))
-  wider <- arcgistiles:::expand_bbox(bbox, 0.1)
+test_that("margin widens every page", {
+  skip_if_no_network()
 
-  expect_equal(unname(as.double(wider)), c(-1, -1, 11, 11))
+  service <- map_server(census_url())
+  pages <- map_grid(c(-104, 35.6, -94.32, 41), nrow = 1L, ncol = 2L, crs = 4326)
+
+  plain <- map_series(service, pages, size = c(200L, 200L), progress = FALSE)
+  padded <- map_series(
+    service,
+    pages,
+    size = c(200L, 200L),
+    margin = 0.2,
+    progress = FALSE
+  )
+
+  expect_true(all(padded[["scale"]] > plain[["scale"]]))
 })

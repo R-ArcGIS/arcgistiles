@@ -2,7 +2,7 @@ test_that("tiles download and carry their extents", {
   skip_if_no_network()
 
   service <- map_server(world_imagery_url())
-  tiles <- get_tiles(service, service_bbox(service), level = 2L, progress = FALSE)
+  tiles <- get_tiles(service, service@full_extent, level = 2L, progress = FALSE)
 
   expect_s3_class(tiles, "arcgistiles::TileSet")
   expect_equal(nrow(tiles@tiles), 16L)
@@ -15,7 +15,7 @@ test_that("a tile set bounding box covers every tile", {
   skip_if_no_network()
 
   service <- map_server(world_imagery_url())
-  tiles <- get_tiles(service, service_bbox(service), level = 1L, progress = FALSE)
+  tiles <- get_tiles(service, service@full_extent, level = 1L, progress = FALSE)
   bbox <- tileset_bbox(tiles)
 
   expect_s3_class(bbox, "bbox")
@@ -28,7 +28,7 @@ test_that("tiles become a georeferenced raster", {
   skip_if_not_installed("terra")
 
   service <- map_server(world_imagery_url())
-  tiles <- get_tiles(service, service_bbox(service), level = 1L, progress = FALSE)
+  tiles <- get_tiles(service, service@full_extent, level = 1L, progress = FALSE)
   raster <- as_rast(tiles)
 
   expect_s4_class(raster, "SpatRaster")
@@ -43,7 +43,7 @@ test_that("vector tiles download as pbf", {
   skip_if_no_network()
 
   service <- vector_tile_server(open_street_map_url())
-  tiles <- get_vector_tiles(service, service_bbox(service), level = 1L, progress = FALSE)
+  tiles <- get_vector_tiles(service, service@full_extent, level = 1L, progress = FALSE)
 
   expect_equal(tolower(tiles@format), "pbf")
   expect_true(any(tiles@tiles[["ok"]]))
@@ -55,7 +55,7 @@ test_that("vector tiles cannot be rasterized", {
   skip_if_not_installed("terra")
 
   service <- vector_tile_server(open_street_map_url())
-  tiles <- get_vector_tiles(service, service_bbox(service), level = 0L, progress = FALSE)
+  tiles <- get_vector_tiles(service, service@full_extent, level = 0L, progress = FALSE)
 
   expect_error(as_rast(tiles), "Vector tiles")
 })

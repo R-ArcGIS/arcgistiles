@@ -6,8 +6,7 @@
 \usage{
 MapImage(
   path = NA_character_,
-  bbox = numeric(0),
-  crs = NULL,
+  bbox = NULL,
   size = integer(0),
   format = NA_character_,
   scale = NA_real_
@@ -16,9 +15,7 @@ MapImage(
 \arguments{
 \item{path}{String. Path to the image on disk.}
 
-\item{bbox}{Numeric. Length four \code{c(xmin, ymin, xmax, ymax)} of the image.}
-
-\item{crs}{Coordinate reference system of the image.}
+\item{bbox}{A \code{bbox} holding the extent and CRS of the image.}
 
 \item{size}{Integer. Length two \code{c(width, height)} in pixels.}
 
@@ -36,7 +33,6 @@ ratio of \code{size}.
 }
 \seealso{
 Other map images:
-\code{\link[=export_map]{export_map()}},
-\code{\link[=image_bbox]{image_bbox()}}
+\code{\link[=export_map]{export_map()}}
 }
 \concept{map images}

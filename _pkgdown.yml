@@ -9,7 +9,6 @@ reference:
     contents:
       - map_server
       - vector_tile_server
-      - service_bbox
       - Service
       - MapServer
       - VectorTileServer
@@ -41,7 +40,6 @@ reference:
     contents:
       - export_map
       - MapImage
-      - image_bbox
 
   - title: Map series
     desc: Export many extents at one scale.
@@ -66,10 +64,6 @@ reference:
       - basemap_webmap
       - basemap_tile_server
       - basemap_session
-      - basemap_languages
-      - basemap_worldviews
-      - basemap_self
-      - basemap_url
 
   - title: Tile export
     desc: Package a service's cache for offline use.

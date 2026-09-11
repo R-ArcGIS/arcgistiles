@@ -4,7 +4,7 @@
 \name{arcgistiles-package}
 \alias{arcgistiles}
 \alias{arcgistiles-package}
-\title{arcgistiles: Map Images, Tiles, and Basemaps from 'ArcGIS' Services}
+\title{arcgistiles: Use Map Images, Tiles, and Basemaps from 'ArcGIS' Services}
 \description{
 Read map services, vector tile services, and the 'ArcGIS' basemap styles service. Export map images for a single extent or a series of extents, download raster and vector tiles for an area of interest, and assemble them into georeferenced rasters for plotting alongside vector data.
 }

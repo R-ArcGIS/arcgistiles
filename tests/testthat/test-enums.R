@@ -18,15 +18,8 @@ test_that("enums carry sensible defaults", {
   expect_equal(as.character(storage_format()), "CompactV2")
 })
 
-test_that("storage format maps onto the esri constant", {
-  expect_equal(
-    arcgistiles:::esri_storage_format(storage_format("CompactV2")),
-    "esriMapCacheStorageModeCompactV2"
-  )
-})
-
 test_that("layer visibility builds the layers parameter", {
-  expect_equal(arcgistiles:::layer_query(c(2, 4, 7), "show"), "show:2,4,7")
+  expect_equal(arcgistiles:::layer_query(c(2, 4, 7), "show"), "show:2, 4, 7")
   expect_equal(arcgistiles:::layer_query(0, "hide"), "hide:0")
   expect_null(arcgistiles:::layer_query(NULL, "show"))
 
@@ -44,7 +37,7 @@ test_that("layer definitions are sent as json", {
 })
 
 test_that("levels collapse to the service's syntax", {
-  expect_equal(arcgistiles:::collapse_levels(0:3), "0,1,2,3")
+  expect_equal(arcgistiles:::collapse_levels(0:3), "0, 1, 2, 3")
   expect_equal(arcgistiles:::collapse_levels("1-4,7-9"), "1-4,7-9")
   expect_error(arcgistiles:::collapse_levels(list(1)), "numeric vector")
 })

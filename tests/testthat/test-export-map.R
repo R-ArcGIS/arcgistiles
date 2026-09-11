@@ -9,10 +9,10 @@ test_that("an exported image reports the extent the server drew", {
   expect_true(file.exists(image@path))
   expect_true(file.size(image@path) > 0)
 
-  expect_equal(image@bbox[1L], -104)
-  expect_equal(image@bbox[3L], -94.32)
-  expect_true(image@bbox[2L] < 35.6)
-  expect_true(image@bbox[4L] > 41)
+  expect_equal(unname(image@bbox[["xmin"]]), -104)
+  expect_equal(unname(image@bbox[["xmax"]]), -94.32)
+  expect_true(image@bbox[["ymin"]] < 35.6)
+  expect_true(image@bbox[["ymax"]] > 41)
 })
 
 test_that("an exported image becomes a georeferenced raster", {
@@ -26,17 +26,7 @@ test_that("an exported image becomes a georeferenced raster", {
   expect_s4_class(raster, "SpatRaster")
   expect_equal(terra::ncol(raster), 300L)
   expect_equal(terra::nrow(raster), 200L)
-  expect_equal(unname(as.vector(terra::ext(raster))[["xmin"]]), image@bbox[1L])
-})
-
-test_that("image_bbox carries the image crs", {
-  skip_if_no_network()
-
-  service <- map_server(census_url())
-  bbox <- image_bbox(export_map(service, c(-104, 35.6, -94.32, 41), size = c(200L, 200L)))
-
-  expect_s3_class(bbox, "bbox")
-  expect_false(is.na(sf::st_crs(bbox)))
+  expect_equal(unname(as.vector(terra::ext(raster))[["xmin"]]), unname(image@bbox[["xmin"]]))
 })
 
 test_that("layers and definition expressions reach the service", {

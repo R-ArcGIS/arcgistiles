@@ -17,25 +17,30 @@ NULL
 #' vector_tile_style(vector_tile_server(open_street_map_url()))
 #' }
 vector_tile_style <- function(x, error_call = rlang::caller_env()) {
-  base <- paste0(x@url, "/", x@default_styles)
-  style <- arc_json(base, token = x@token, call = error_call)
+  path <- strsplit(x@default_styles, "/", fixed = TRUE)[[1L]]
+  style <- arc_get(x@url, x@token, path = path, call = error_call)
 
-  root <- paste0(x@url, "/resources/")
+  # the style document sits at <default_styles>/root.json, so its siblings
+  # resolve against that directory, and url_modify_relative() percent encodes
+  # the {fontstack} and {range} braces the glyphs template has to keep literal
+  root <- httr2::url_modify(
+    x@url,
+    path = file.path(httr2::url_parse(x@url)[["path"]], x@default_styles, "root.json")
+  )
 
-  if (!is.null(style[["sprite"]])) {
-    style[["sprite"]] <- resolve_relative(style[["sprite"]], root)
+  resolve <- function(relative) {
+    if (is.null(relative)) {
+      return(NULL)
+    }
+
+    url <- httr2::url_modify_relative(root, relative)
+    gsub("%7B", "{", gsub("%7D", "}", url, fixed = TRUE), fixed = TRUE)
   }
 
-  if (!is.null(style[["glyphs"]])) {
-    style[["glyphs"]] <- resolve_relative(style[["glyphs"]], root)
-  }
+  style[["sprite"]] <- resolve(style[["sprite"]])
+  style[["glyphs"]] <- resolve(style[["glyphs"]])
 
   style
-}
-
-# style documents reference sibling resources as `../sprites/sprite`
-resolve_relative <- function(path, root) {
-  sub("^(\\.\\./)+", root, path)
 }
 
 #' Vector tile resources
@@ -51,11 +56,7 @@ resolve_relative <- function(path, root) {
 #' vector_tile_resources(vector_tile_server(open_street_map_url()))
 #' }
 vector_tile_resources <- function(x, error_call = rlang::caller_env()) {
-  res <- arc_json(
-    paste0(x@url, "/resources/info"),
-    token = x@token,
-    call = error_call
-  )
+  res <- arc_get(x@url, x@token, path = c("resources", "info"), call = error_call)
 
   as.character(res[["resourceInfo"]])
 }
@@ -102,7 +103,13 @@ vector_tile_sprite <- function(
   check_bool(retina, call = error_call)
 
   style <- vector_tile_style(x, error_call = error_call)
-  base <- style[["sprite"]] %||% paste0(x@url, "/resources/sprites/sprite")
+  base <- style[["sprite"]] %||%
+    httr2::url_modify(x@url, path = file.path(
+      httr2::url_parse(x@url)[["path"]],
+      "resources",
+      "sprites",
+      "sprite"
+    ))
 
   if (retina) {
     base <- paste0(base, "@2x")
@@ -145,16 +152,18 @@ vector_tile_font <- function(
   check_string(font, allow_empty = FALSE, call = error_call)
   check_string(range, allow_empty = FALSE, call = error_call)
 
-  url <- paste0(
-    x@url,
-    "/resources/fonts/",
-    utils::URLencode(font, reserved = TRUE),
-    "/",
-    range,
-    ".pbf"
-  )
+  url <- httr2::url_modify(x@url, path = file.path(
+    httr2::url_parse(x@url)[["path"]],
+    "resources",
+    "fonts",
+    font,
+    paste0(range, ".pbf")
+  ))
 
-  path <- file.path(dir, paste0(gsub("[^A-Za-z0-9]+", "-", font), "_", range, ".pbf"))
+  path <- file.path(
+    dir,
+    paste0(gsub("[^A-Za-z0-9]+", "-", font), "_", range, ".pbf")
+  )
   ok <- download_all(url, path, x@token, progress = FALSE, call = error_call)
 
   if (!ok) {
@@ -201,32 +210,35 @@ tilemap <- function(
   check_number_whole(width, min = 1, call = error_call)
   check_number_whole(height, min = 1, call = error_call)
 
-  res <- arc_json(
-    sprintf(
-      "%s/tilemap/%d/%d/%d/%d/%d",
-      x@url,
+  res <- arc_get(
+    x@url,
+    x@token,
+    path = c(
+      "tilemap",
       as.integer(level),
       as.integer(row),
       as.integer(col),
       as.integer(width),
       as.integer(height)
     ),
-    token = x@token,
     call = error_call
   )
 
-  location <- res[["location"]] %||% list(top = row, left = col, width = width, height = height)
-  data <- res[["data"]] %||% rep(as.integer(isTRUE(res[["valid"]])), width * height)
+  location <- res[["location"]] %||%
+    list(top = row, left = col, width = width, height = height)
+
+  data <- res[["data"]] %||%
+    rep(as.integer(isTRUE(res[["valid"]])), width * height)
 
   grid <- expand.grid(
     col = seq.int(location[["left"]], length.out = location[["width"]]),
     row = seq.int(location[["top"]], length.out = location[["height"]])
   )
 
-  data.frame(
+  data_frame(data.frame(
     level = as.integer(level),
     row = grid[["row"]],
     col = grid[["col"]],
     available = as.logical(data)
-  )
+  ))
 }

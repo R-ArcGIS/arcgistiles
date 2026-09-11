@@ -1,10 +1,10 @@
 library(arcgistiles)
 
 ms <- map_server(world_imagery_url())
-ms
 
 tile_info(ms)
 
+lods(ms)
 head(lods(ms), 6)
 
 service_bbox(ms)

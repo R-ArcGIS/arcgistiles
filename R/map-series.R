@@ -30,7 +30,7 @@ map_grid <- function(
   check_number_whole(ncol, min = 1, call = error_call)
   check_number_decimal(overlap, min = 0, call = error_call)
 
-  bbox <- as_tile_bbox(bbox, crs, call = error_call)
+  bbox <- as_bbox(bbox, crs, call = error_call)
 
   width <- (bbox[["xmax"]] - bbox[["xmin"]]) / ncol
   height <- (bbox[["ymax"]] - bbox[["ymin"]]) / nrow
@@ -50,13 +50,6 @@ map_grid <- function(
     ymax = ymax + height * overlap
   )
 
-  sf::st_sf(
-    pages[, c("page", "row", "col")],
-    geometry = extents_as_sfc(pages, sf::st_crs(bbox))
-  )
-}
-
-extents_as_sfc <- function(pages, crs) {
   boxes <- lapply(seq_len(nrow(pages)), function(i) {
     sf::st_as_sfc(sf::st_bbox(c(
       xmin = pages[["xmin"]][i],
@@ -66,7 +59,10 @@ extents_as_sfc <- function(pages, crs) {
     )))[[1L]]
   })
 
-  sf::st_sfc(boxes, crs = crs)
+  sf::st_sf(
+    pages[, c("page", "row", "col")],
+    geometry = sf::st_sfc(boxes, crs = sf::st_crs(bbox))
+  )
 }
 
 #' Export a series of map images
@@ -121,7 +117,56 @@ map_series <- function(
   format <- as.character(image_format(as.character(format)))
   size <- check_size(size, call = error_call)
 
-  extents <- as_page_extents(pages, margin, error_call)
+  extents <- if (inherits(pages, "bbox")) {
+    list(pages)
+  } else if (inherits(pages, c("sf", "sfc"))) {
+    geometry <- sf::st_geometry(pages)
+    page_crs <- sf::st_crs(geometry)
+
+    lapply(seq_along(geometry), function(i) {
+      sf::st_bbox(geometry[i], crs = page_crs)
+    })
+  } else if (is.data.frame(pages)) {
+    missing <- setdiff(c("xmin", "ymin", "xmax", "ymax"), base::names(pages))
+
+    if (length(missing) > 0L) {
+      cli::cli_abort(
+        "{.arg pages} is missing {.field {missing}}.",
+        call = error_call
+      )
+    }
+
+    lapply(seq_len(nrow(pages)), function(i) {
+      sf::st_bbox(c(
+        xmin = pages[["xmin"]][i],
+        ymin = pages[["ymin"]][i],
+        xmax = pages[["xmax"]][i],
+        ymax = pages[["ymax"]][i]
+      ))
+    })
+  } else if (is.list(pages)) {
+    lapply(pages, as_bbox, call = error_call)
+  } else {
+    cli::cli_abort(
+      "{.arg pages} must be an {.cls sf}, a data frame of extents, or a list of {.cls bbox}.",
+      call = error_call
+    )
+  }
+
+  if (margin > 0) {
+    extents <- lapply(extents, function(bbox) {
+      width <- (bbox[["xmax"]] - bbox[["xmin"]]) * margin
+      height <- (bbox[["ymax"]] - bbox[["ymin"]]) * margin
+
+      bbox[["xmin"]] <- bbox[["xmin"]] - width
+      bbox[["xmax"]] <- bbox[["xmax"]] + width
+      bbox[["ymin"]] <- bbox[["ymin"]] - height
+      bbox[["ymax"]] <- bbox[["ymax"]] + height
+
+      bbox
+    })
+  }
+
   n <- length(extents)
 
   page_names <- page_names %||% sprintf("page-%03d", seq_len(n))
@@ -135,11 +180,14 @@ map_series <- function(
 
   shared <- compact(c(
     list(
-      size = collapse_num(size),
+      size = toString(size),
       format = format,
       transparent = tolower(transparent),
       dpi = as.integer(dpi),
-      imageSR = crs_wkid(crs, required = TRUE, call = error_call),
+      imageSR = arcgisutils::validate_crs(
+        crs,
+        call = error_call
+      )[["spatialReference"]][["wkid"]],
       layers = layer_query(layers, visibility, error_call),
       layerDefs = layer_defs_query(layer_defs, error_call),
       f = "json"
@@ -149,9 +197,10 @@ map_series <- function(
 
   reqs <- lapply(extents, function(bbox) {
     arcgisutils::arc_base_req(
-      paste0(x@url, "/export"),
+      x@url,
       x@token,
-      query = c(bbox_query(bbox, x@crs, error_call), shared),
+      path = "export",
+      query = c(bbox_query(bbox, error_call), shared),
       error_call = error_call
     )
   })
@@ -162,7 +211,17 @@ map_series <- function(
     progress = progress
   )
 
-  results <- lapply(responses, parse_export_response)
+  # a page that failed leaves no href, and the rest of the series still stands
+  results <- lapply(responses, function(resp) {
+    if (inherits(resp, "error") || httr2::resp_status(resp) >= 300L) {
+      return(list())
+    }
+
+    res <- RcppSimdJson::fparse(httr2::resp_body_string(resp))
+
+    if (is.null(res[["error"]])) res else list()
+  })
+
   paths <- file.path(dir, paste0(page_names, ".", image_file_ext(format)))
 
   hrefs <- vapply(results, function(r) r[["href"]] %||% NA_character_, character(1))
@@ -171,31 +230,19 @@ map_series <- function(
   downloaded <- !is.na(hrefs)
   downloaded[downloaded] <- ok
 
-  series_table(page_names, paths, downloaded, results)
-}
+  extents <- lapply(results, function(r) {
+    if (is.null(r[["extent"]])) {
+      return(rep(NA_real_, 4L))
+    }
 
-parse_export_response <- function(resp) {
-  if (inherits(resp, "error") || httr2::resp_status(resp) >= 300L) {
-    return(list())
-  }
+    as.double(arcgisutils::from_envelope(r[["extent"]]))
+  })
 
-  res <- RcppSimdJson::fparse(httr2::resp_body_string(resp))
-
-  if (!is.null(res[["error"]])) {
-    return(list())
-  }
-
-  res
-}
-
-series_table <- function(page_names, paths, ok, results) {
-  extents <- lapply(results, function(r) as_extent_vec(r[["extent"]]))
-
-  data.frame(
+  data_frame(data.frame(
     page = seq_along(page_names),
     name = page_names,
-    path = ifelse(ok, paths, NA_character_),
-    ok = ok,
+    path = ifelse(downloaded, paths, NA_character_),
+    ok = downloaded,
     xmin = vapply(extents, `[`, double(1), 1L),
     ymin = vapply(extents, `[`, double(1), 2L),
     xmax = vapply(extents, `[`, double(1), 3L),
@@ -205,71 +252,5 @@ series_table <- function(page_names, paths, ok, results) {
       function(r) as.double(r[["scale"]] %||% NA_real_),
       double(1)
     )
-  )
-}
-
-as_page_extents <- function(pages, margin = 0, call = rlang::caller_env()) {
-  boxes <- page_bboxes(pages, call)
-
-  if (margin == 0) {
-    return(boxes)
-  }
-
-  lapply(boxes, expand_bbox, margin = margin)
-}
-
-page_bboxes <- function(pages, call = rlang::caller_env()) {
-  if (inherits(pages, "bbox")) {
-    return(list(pages))
-  }
-
-  if (inherits(pages, c("sf", "sfc"))) {
-    geometry <- sf::st_geometry(pages)
-    crs <- sf::st_crs(geometry)
-
-    return(lapply(seq_along(geometry), function(i) {
-      sf::st_bbox(geometry[i], crs = crs)
-    }))
-  }
-
-  if (is.data.frame(pages)) {
-    missing <- setdiff(c("xmin", "ymin", "xmax", "ymax"), base::names(pages))
-
-    if (length(missing) > 0L) {
-      cli::cli_abort(
-        "{.arg pages} is missing {.field {missing}}.",
-        call = call
-      )
-    }
-
-    return(lapply(seq_len(nrow(pages)), function(i) {
-      sf::st_bbox(c(
-        xmin = pages[["xmin"]][i],
-        ymin = pages[["ymin"]][i],
-        xmax = pages[["xmax"]][i],
-        ymax = pages[["ymax"]][i]
-      ))
-    }))
-  }
-
-  if (is.list(pages)) {
-    return(lapply(pages, as_tile_bbox, call = call))
-  }
-
-  cli::cli_abort(
-    "{.arg pages} must be an {.cls sf}, a data frame of extents, or a list of {.cls bbox}.",
-    call = call
-  )
-}
-
-expand_bbox <- function(bbox, margin) {
-  width <- (bbox[["xmax"]] - bbox[["xmin"]]) * margin
-  height <- (bbox[["ymax"]] - bbox[["ymin"]]) * margin
-
-  bbox[["xmin"]] <- bbox[["xmin"]] - width
-  bbox[["xmax"]] <- bbox[["xmax"]] + width
-  bbox[["ymin"]] <- bbox[["ymin"]] - height
-  bbox[["ymax"]] <- bbox[["ymax"]] + height
-
-  bbox
+  ))
 }

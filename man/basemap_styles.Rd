@@ -16,25 +16,24 @@ mentioned in error messages as the source of the error. See the
 }
 \value{
 A data frame with one row per style, including its \code{path}, \code{name},
-\code{styleFamily}, and \code{group}.
+\code{styleFamily}, and \code{group}. The \code{languages} and \code{worldviews} attributes
+hold the codes accepted by \code{\link[=basemap_style]{basemap_style()}}.
 }
 \description{
-Lists the styles the basemap styles service publishes. No token is required.
+Lists the styles the basemap styles service publishes, along with the label
+languages and worldviews they accept. No token is required.
 }
 \examples{
 \dontrun{
-basemap_styles("arcgis")
+styles <- basemap_styles("arcgis")
+attr(styles, "languages")
 }
 }
 \seealso{
 Other basemaps:
-\code{\link[=basemap_languages]{basemap_languages()}},
-\code{\link[=basemap_self]{basemap_self()}},
 \code{\link[=basemap_session]{basemap_session()}},
 \code{\link[=basemap_style]{basemap_style()}},
 \code{\link[=basemap_tile_server]{basemap_tile_server()}},
-\code{\link[=basemap_url]{basemap_url()}},
-\code{\link[=basemap_webmap]{basemap_webmap()}},
-\code{\link[=basemap_worldviews]{basemap_worldviews()}}
+\code{\link[=basemap_webmap]{basemap_webmap()}}
 }
 \concept{basemaps}

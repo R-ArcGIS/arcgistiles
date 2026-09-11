@@ -116,7 +116,3 @@ places <- s7x::new_enum(
   allow_na = FALSE,
   default = "none"
 )
-
-esri_storage_format <- function(x) {
-  paste0("esriMapCacheStorageMode", as.character(x))
-}

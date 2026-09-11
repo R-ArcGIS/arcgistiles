@@ -21,7 +21,7 @@ skip_if_no_network <- function() {
   testthat::skip_if_offline()
 }
 
-service_extent <- function() {
+world_extent <- function() {
   c(-20037508.342787, -20037508.342787, 20037508.342787, 20037508.342787)
 }
 

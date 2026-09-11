@@ -8,13 +8,11 @@ MapServer(
   url = NA_character_,
   metadata = list(),
   name = NA_character_,
-  crs = NULL,
-  full_extent = numeric(0),
+  full_extent = NULL,
   tile_info = NULL,
   capabilities = character(0),
   token = NULL,
   cached = NA,
-  layers = data.frame(),
   export_tiles_allowed = NA,
   max_export_tiles = NA_real_
 )
@@ -26,9 +24,7 @@ MapServer(
 
 \item{name}{String. Service name.}
 
-\item{crs}{Coordinate reference system of the service.}
-
-\item{full_extent}{Numeric. Length four \code{c(xmin, ymin, xmax, ymax)}.}
+\item{full_extent}{A \code{bbox} carrying the service's extent and CRS.}
 
 \item{tile_info}{A \link{TileInfo}, or \code{NULL} when the service is not cached.}
 
@@ -37,8 +33,6 @@ MapServer(
 \item{token}{An \code{httr2_token}, or \code{NULL}.}
 
 \item{cached}{Bool. Whether the service is served from a tile cache.}
-
-\item{layers}{Data frame. The service's layers.}
 
 \item{export_tiles_allowed}{Bool. Whether clients may export cache tiles.}
 
@@ -50,13 +44,16 @@ A \code{MapServer} object.
 \description{
 A \code{MapServer} endpoint. Use \code{\link[=map_server]{map_server()}} to create one.
 }
+\details{
+Layer level access belongs to \code{arcgislayers}. Use \code{arcgislayers::arc_open()}
+and \code{arcgislayers::get_layer()} to reach the features behind a map service.
+}
 \seealso{
 Other services:
 \code{\link[=Service]{Service()}},
 \code{\link[=VectorTileServer]{VectorTileServer()}},
 \code{\link{known-services}},
 \code{\link[=map_server]{map_server()}},
-\code{\link[=service_bbox]{service_bbox()}},
 \code{\link[=vector_tile_server]{vector_tile_server()}}
 }
 \concept{services}

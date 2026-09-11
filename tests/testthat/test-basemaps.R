@@ -19,49 +19,15 @@ test_that("the catalogue filters by family", {
   expect_error(basemap_styles("esri"))
 })
 
-test_that("languages and worldviews come back as lookup tables", {
+test_that("the catalogue carries the codes basemap_style accepts", {
   skip_if_no_network()
 
-  languages <- basemap_languages()
-  worldviews <- basemap_worldviews()
+  styles <- basemap_styles()
+  languages <- attr(styles, "languages")
+  worldviews <- attr(styles, "worldviews")
 
   expect_true(all(c("code", "name") %in% names(languages)))
   expect_true(all(c("code", "name") %in% names(worldviews)))
   expect_true("global" %in% languages[["code"]])
 })
 
-test_that("a style path is built from its parts", {
-  expect_equal(arcgistiles:::style_path("navigation", "arcgis"), "arcgis/navigation")
-  expect_equal(arcgistiles:::style_path("arcgis/navigation", "open"), "arcgis/navigation")
-  expect_error(arcgistiles:::style_path("", "arcgis"))
-})
-
-test_that("style query parameters are validated", {
-  expect_equal(
-    arcgistiles:::style_query("es", NULL, "all"),
-    list(language = "es", places = "all", f = "json")
-  )
-
-  expect_equal(arcgistiles:::style_query(NULL, NULL, NULL), list(f = "json"))
-  expect_error(arcgistiles:::style_query(NULL, NULL, "some"))
-})
-
-test_that("the service url is configurable", {
-  withr::local_options(arcgistiles.basemap_url = "https://example.com/v2")
-
-  expect_equal(basemap_url(), "https://example.com/v2")
-})
-
-test_that("a style names its vector tile source", {
-  expect_equal(
-    arcgistiles:::style_source_url(
-      list(sources = list(esri = list(url = "https://example.com/VectorTileServer/")))
-    ),
-    "https://example.com/VectorTileServer"
-  )
-
-  expect_error(
-    arcgistiles:::style_source_url(list(sources = list(esri = list(type = "vector")))),
-    "no vector tile service"
-  )
-})

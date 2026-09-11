@@ -95,7 +95,10 @@ export_tiles_job <- function(
       },
       tilePackage = if (!vector) tolower(tile_package),
       storageFormatType = if (!vector) {
-        esri_storage_format(storage_format(as.character(storage_format)))
+        paste0(
+          "esriMapCacheStorageMode",
+          as.character(storage_format(as.character(storage_format)))
+        )
       },
       optimizeTilesForSize = if (!vector) tolower(optimize),
       compressionQuality = compression_quality,
@@ -162,12 +165,7 @@ estimate_export_tiles_size <- function(
 }
 
 submit_tile_job <- function(x, operation, query, call = rlang::caller_env()) {
-  res <- arc_json(
-    paste0(x@url, "/", operation),
-    token = x@token,
-    query = query,
-    call = call
-  )
+  res <- arc_get(x@url, x@token, path = operation, query = query, call = call)
 
   job_id <- res[["jobId"]]
 
@@ -210,22 +208,21 @@ job_messages <- function(job, error_call = rlang::caller_env()) {
   messages <- job_info(job, error_call)[["messages"]]
 
   if (is.null(messages) || length(messages) == 0L) {
-    return(data.frame(type = character(), description = character()))
+    return(data_frame(data.frame(
+      type = character(),
+      description = character()
+    )))
   }
 
   if (!is.data.frame(messages)) {
-    messages <- rbind_rows(messages)
+    messages <- rbind_results(messages, call = error_call)
   }
 
-  messages
+  data_frame(messages, call = error_call)
 }
 
 job_info <- function(job, call = rlang::caller_env()) {
-  arc_json(
-    paste0(job@url, "/jobs/", job@job_id),
-    token = job@token,
-    call = call
-  )
+  arc_get(job@url, job@token, path = c("jobs", job@job_id), call = call)
 }
 
 #' Wait for a tile export job
@@ -309,9 +306,10 @@ job_result <- function(
     return(output)
   }
 
-  res <- arc_json(
-    paste0(job@url, "/exportTiles/jobs/", job@job_id, "/results/", param),
-    token = job@token,
+  res <- arc_get(
+    job@url,
+    job@token,
+    path = c("exportTiles", "jobs", job@job_id, "results", param),
     call = error_call
   )
 
@@ -352,7 +350,10 @@ write_tile_package <- function(
     )
   }
 
-  file <- file %||% tempfile(fileext = url_file_ext(url))
+  # a signed download URL carries a long query string, so the extension has to
+  # come from the path alone
+  ext <- tools::file_ext(httr2::url_parse(url)[["path"]] %||% "")
+  file <- file %||% tempfile(fileext = if (nzchar(ext)) paste0(".", ext) else ".tpkx")
 
   arcgisutils::arc_base_req(url, job@token, error_call = error_call) |>
     httr2::req_perform(path = file, error_call = error_call)
@@ -400,25 +401,19 @@ export_tiles <- function(
   )
 }
 
-# a signed download URL carries a long query string, so the extension has to
-# come from the path alone
-url_file_ext <- function(url) {
-  ext <- tools::file_ext(httr2::url_parse(url)[["path"]] %||% "")
-
-  if (!nzchar(ext)) {
-    return(".tpkx")
-  }
-
-  paste0(".", ext)
-}
-
+# the envelope form carries the spatial reference, which the comma separated
+# form cannot
 export_extent <- function(bbox, x, call = rlang::caller_env()) {
   if (is.null(bbox)) {
     return(NULL)
   }
 
-  bbox <- as_tile_bbox(bbox, x@crs, call = call)
-  collapse_num(as.double(bbox))
+  bbox <- as_bbox(bbox, x@crs, call = call)
+
+  yyjsonr::write_json_str(
+    arcgisutils::as_extent(bbox, call = call),
+    auto_unbox = TRUE
+  )
 }
 
 collapse_levels <- function(levels, call = rlang::caller_env()) {
@@ -434,7 +429,7 @@ collapse_levels <- function(levels, call = rlang::caller_env()) {
     )
   }
 
-  collapse_num(as.integer(levels))
+  toString(as.integer(levels))
 }
 
 aoi_json <- function(area_of_interest, call = rlang::caller_env()) {

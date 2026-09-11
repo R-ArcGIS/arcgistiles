@@ -38,7 +38,6 @@ Other services:
 \code{\link[=Service]{Service()}},
 \code{\link[=VectorTileServer]{VectorTileServer()}},
 \code{\link[=map_server]{map_server()}},
-\code{\link[=service_bbox]{service_bbox()}},
 \code{\link[=vector_tile_server]{vector_tile_server()}}
 }
 \concept{services}

@@ -37,8 +37,8 @@ TileInfo <- S7::new_class(
     dpi = s7x::class_int,
     format = s7x::class_string,
     origin = S7::class_double,
-    crs = class_crs,
-    lods = class_table
+    crs = S7::new_union(NULL, S7::new_S3_class("crs")),
+    lods = class_data_frame
   ),
   validator = function(self) {
     if (length(self@origin) != 2L) {
@@ -59,7 +59,7 @@ S7::method(print, TileInfo) <- function(x, ...) {
   levels <- x@lods[["level"]]
 
   cli::cli_text("{.cls TileInfo} {x@cols}x{x@rows} {x@format} at {x@dpi} dpi")
-  cli::cli_text("{.strong CRS:} {crs_label(x@crs)}")
+  cli::cli_text("{.strong CRS:} {x@crs$input %||% 'unknown'}")
   cli::cli_text("{.strong Origin:} {.val {x@origin}}")
   cli::cli_text(
     "{.strong Levels:} {min(levels)}-{max(levels)} ({length(levels)} lods)"
@@ -76,7 +76,7 @@ as_tile_info <- function(x, call = rlang::caller_env()) {
   lods <- x[["lods"]]
 
   if (!is.data.frame(lods)) {
-    lods <- rbind_rows(lods)
+    lods <- rbind_results(lods, call = call)
   }
 
   lods <- lods[order(lods[["level"]]), c("level", "resolution", "scale")]
@@ -88,8 +88,11 @@ as_tile_info <- function(x, call = rlang::caller_env()) {
     dpi = as.integer(x[["dpi"]]),
     format = as.character(x[["format"]]),
     origin = c(x[["origin"]][["x"]], x[["origin"]][["y"]]),
-    crs = as_crs(x[["spatialReference"]], call = call),
-    lods = lods
+    crs = arcgisutils::from_spatial_reference(
+      x[["spatialReference"]],
+      error_call = call
+    ),
+    lods = data_frame(lods, call = call)
   )
 }
 
@@ -127,7 +130,7 @@ lods <- function(x) {
 
   res[["tile_width"]] <- res[["resolution"]] * info@cols
   res[["tile_height"]] <- res[["resolution"]] * info@rows
-  res
+  data_frame(res)
 }
 
 #' Level nearest a resolution
@@ -145,11 +148,18 @@ lods <- function(x) {
 #' \dontrun{
 #' level_for_resolution(map_server(world_imagery_url()), 100)
 #' }
-level_for_resolution <- function(x, resolution, error_call = rlang::caller_env()) {
+level_for_resolution <- function(
+  x,
+  resolution,
+  error_call = rlang::caller_env()
+) {
   check_number_decimal(resolution, allow_infinite = FALSE, call = error_call)
 
   if (resolution <= 0) {
-    cli::cli_abort("{.arg resolution} must be greater than 0.", call = error_call)
+    cli::cli_abort(
+      "{.arg resolution} must be greater than 0.",
+      call = error_call
+    )
   }
 
   info <- tile_info(x)
@@ -179,7 +189,7 @@ level_for_size <- function(
   error_call = rlang::caller_env()
 ) {
   info <- tile_info(x)
-  bbox <- as_tile_bbox(bbox, info@crs, call = error_call)
+  bbox <- as_bbox(bbox, info@crs, call = error_call)
   size <- check_size(size, call = error_call)
 
   level_for_resolution(
@@ -224,14 +234,16 @@ lod_index <- function(info, level, call = rlang::caller_env()) {
 tile_extent <- function(x, level, row, col, error_call = rlang::caller_env()) {
   info <- tile_info(x)
 
-  args <- recycle_common(
+  args <- vctrs::vec_recycle_common(
     level = as.integer(level),
     row = as.integer(row),
     col = as.integer(col),
-    call = error_call
+    .call = error_call
   )
 
-  resolution <- info@lods[["resolution"]][lod_index(info, args[["level"]], error_call)]
+  resolution <- info@lods[["resolution"]][
+    lod_index(info, args[["level"]], error_call)
+  ]
 
   width <- resolution * info@cols
   height <- resolution * info@rows
@@ -239,7 +251,7 @@ tile_extent <- function(x, level, row, col, error_call = rlang::caller_env()) {
   xmin <- info@origin[1L] + args[["col"]] * width
   ymax <- info@origin[2L] - args[["row"]] * height
 
-  data.frame(
+  data_frame(data.frame(
     level = args[["level"]],
     row = args[["row"]],
     col = args[["col"]],
@@ -247,7 +259,7 @@ tile_extent <- function(x, level, row, col, error_call = rlang::caller_env()) {
     ymin = ymax - height,
     xmax = xmin + width,
     ymax = ymax
-  )
+  ))
 }
 
 #' Tiles covering a bounding box
@@ -272,19 +284,34 @@ tile_grid <- function(x, bbox, level, error_call = rlang::caller_env()) {
   check_number_whole(level, call = error_call)
 
   level <- as.integer(level)
-  bbox <- as_tile_bbox(bbox, info@crs, call = error_call)
+  bbox <- as_bbox(bbox, info@crs, call = error_call)
 
   resolution <- info@lods[["resolution"]][lod_index(info, level, error_call)]
 
   width <- resolution * info@cols
   height <- resolution * info@rows
 
-  cols <- span_indices(bbox[["xmin"]] - info@origin[1L], bbox[["xmax"]] - info@origin[1L], width)
-  rows <- span_indices(info@origin[2L] - bbox[["ymax"]], info@origin[2L] - bbox[["ymin"]], height)
+  cols <- span_indices(
+    bbox[["xmin"]] - info@origin[1L],
+    bbox[["xmax"]] - info@origin[1L],
+    width
+  )
+
+  rows <- span_indices(
+    info@origin[2L] - bbox[["ymax"]],
+    info@origin[2L] - bbox[["ymin"]],
+    height
+  )
 
   grid <- expand.grid(col = cols, row = rows)
 
-  tile_extent(info, level, grid[["row"]], grid[["col"]], error_call = error_call)
+  tile_extent(
+    info,
+    level,
+    grid[["row"]],
+    grid[["col"]],
+    error_call = error_call
+  )
 }
 
 span_indices <- function(lo, hi, size) {

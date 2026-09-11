@@ -35,13 +35,9 @@ basemap_session("arcgis")
 }
 \seealso{
 Other basemaps:
-\code{\link[=basemap_languages]{basemap_languages()}},
-\code{\link[=basemap_self]{basemap_self()}},
 \code{\link[=basemap_style]{basemap_style()}},
 \code{\link[=basemap_styles]{basemap_styles()}},
 \code{\link[=basemap_tile_server]{basemap_tile_server()}},
-\code{\link[=basemap_url]{basemap_url()}},
-\code{\link[=basemap_webmap]{basemap_webmap()}},
-\code{\link[=basemap_worldviews]{basemap_worldviews()}}
+\code{\link[=basemap_webmap]{basemap_webmap()}}
 }
 \concept{basemaps}

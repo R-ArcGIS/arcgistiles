@@ -52,7 +52,37 @@ read_vector_tiles <- function(
   }
 
   out <- lapply(present, function(layer) {
-    bind_tile_layer(lapply(decoded, function(tile) tile[[layer]]))
+    pieces <- lapply(compact(lapply(decoded, function(tile) tile[[layer]])), function(piece) {
+      piece[!sf::st_is_empty(sf::st_geometry(piece)), , drop = FALSE]
+    })
+
+    pieces <- pieces[vapply(pieces, nrow, integer(1)) > 0L]
+
+    if (length(pieces) == 0L) {
+      return(NULL)
+    }
+
+    # the same layer can be LINESTRING in one tile and MULTILINESTRING in the
+    # next, and the row binding backends refuse columns whose classes disagree
+    classes <- vapply(pieces, function(p) class(sf::st_geometry(p))[1L], character(1))
+
+    if (length(unique(classes)) > 1L) {
+      pieces <- lapply(pieces, function(p) {
+        sf::st_set_geometry(p, sf::st_cast(sf::st_geometry(p), "GEOMETRY"))
+      })
+    }
+
+    bound <- rbind_results(pieces, call = error_call)
+
+    # collapse::rowbind keeps the first piece's stale bbox, so rebuild the
+    # geometry column for st_bbox() to be right
+    geometry <- sf::st_geometry(bound)
+    attr(geometry, "bbox") <- NULL
+
+    sf::st_set_geometry(
+      bound,
+      sf::st_sfc(unclass(geometry), crs = sf::st_crs(geometry))
+    )
   })
 
   names(out) <- present
@@ -62,8 +92,7 @@ read_vector_tiles <- function(
     return(out)
   }
 
-  crs <- as_crs(crs, call = error_call)
-  lapply(out, sf::st_transform, crs = crs)
+  lapply(out, sf::st_transform, crs = sf::st_crs(crs))
 }
 
 #' Layers present in vector tiles
@@ -110,36 +139,4 @@ decode_tiles <- function(x, call = rlang::caller_env()) {
       zxy = c(tiles[["level"]][i], tiles[["col"]][i], tiles[["row"]][i])
     )
   })
-}
-
-bind_tile_layer <- function(pieces) {
-  pieces <- lapply(compact(pieces), drop_empty_geometry)
-  pieces <- pieces[lengths(pieces) > 0L & vapply(pieces, nrow, integer(1)) > 0L]
-
-  if (length(pieces) == 0L) {
-    return(NULL)
-  }
-
-  if (length(pieces) == 1L) {
-    return(pieces[[1L]])
-  }
-
-  geometry <- attr(pieces[[1L]], "sf_column")
-  fields <- unique(unlist(lapply(pieces, function(p) setdiff(names(p), geometry))))
-
-  do_rbind(lapply(pieces, align_fields, fields = fields, geometry = geometry))
-}
-
-align_fields <- function(piece, fields, geometry) {
-  for (field in setdiff(fields, names(piece))) {
-    piece[[field]] <- NA
-  }
-
-  piece[, c(fields, geometry)]
-}
-
-drop_empty_geometry <- function(x) {
-  out <- x[!sf::st_is_empty(sf::st_geometry(x)), , drop = FALSE]
-  row.names(out) <- NULL
-  out
 }

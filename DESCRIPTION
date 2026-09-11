@@ -1,5 +1,5 @@
 Package: arcgistiles
-Title: Map Images, Tiles, and Basemaps from 'ArcGIS' Services
+Title: Use Map Images, Tiles, and Basemaps from 'ArcGIS' Services
 Version: 0.1.0
 Authors@R:
     person("Josiah", "Parry", , "josiah.parry@gmail.com", role = c("aut", "cre"),
@@ -13,7 +13,7 @@ License: Apache License (>= 2)
 URL: https://github.com/JosiahParry/arcgistiles
 BugReports: https://github.com/JosiahParry/arcgistiles/issues
 Depends:
-    R (>= 4.2)
+    R (>= 4.4)
 Imports:
     arcgisutils (>= 0.4.0),
     cli,
@@ -22,6 +22,7 @@ Imports:
     rlang (>= 1.1.0),
     S7 (>= 0.2.0),
     s7x,
+    vctrs,
     sf,
     yyjsonr
 Suggests:

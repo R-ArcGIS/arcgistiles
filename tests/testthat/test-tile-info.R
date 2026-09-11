@@ -9,7 +9,7 @@ test_that("level 0 is a single tile covering the world", {
 
 test_that("tile counts quadruple with each level", {
   info <- web_mercator_info()
-  world <- service_extent()
+  world <- world_extent()
 
   expect_equal(nrow(tile_grid(info, world, 1L)), 4L)
   expect_equal(nrow(tile_grid(info, world, 2L)), 16L)
@@ -80,11 +80,11 @@ test_that("level selection follows resolution", {
 
   expect_equal(level_for_resolution(info, 156543.03392800014), 0L)
   expect_equal(level_for_resolution(info, 156543.03392800014 / 8), 3L)
-  expect_true(level_for_size(info, service_extent(), c(256L, 256L)) < 3L)
+  expect_true(level_for_size(info, world_extent(), c(256L, 256L)) < 3L)
 })
 
 test_that("an unknown level is an error", {
-  expect_error(tile_grid(web_mercator_info(0:3), service_extent(), 9L), "tiling scheme")
+  expect_error(tile_grid(web_mercator_info(0:3), world_extent(), 9L), "tiling scheme")
 })
 
 test_that("a resolution of zero is an error", {

@@ -8,8 +8,7 @@ NULL
 #' @param url String. Service URL.
 #' @param metadata List. The service's JSON metadata.
 #' @param name String. Service name.
-#' @param crs Coordinate reference system of the service.
-#' @param full_extent Numeric. Length four `c(xmin, ymin, xmax, ymax)`.
+#' @param full_extent A `bbox` carrying the service's extent and CRS.
 #' @param tile_info A [TileInfo], or `NULL` when the service is not cached.
 #' @param capabilities Character. Supported capabilities.
 #' @param token An `httr2_token`, or `NULL`.
@@ -24,11 +23,13 @@ Service <- S7::new_class(
     url = s7x::class_string,
     metadata = S7::class_list,
     name = s7x::class_string,
-    crs = class_crs,
-    full_extent = S7::class_double,
+    full_extent = class_bbox,
     tile_info = S7::new_union(NULL, TileInfo),
     capabilities = S7::class_character,
-    token = class_token
+    token = class_token,
+    crs = S7::new_property(
+      getter = function(self) sf::st_crs(self@full_extent)
+    )
   )
 )
 
@@ -47,9 +48,11 @@ S7::method(tile_info, Service) <- function(x) {
 #'
 #' A `MapServer` endpoint. Use [map_server()] to create one.
 #'
+#' Layer level access belongs to `arcgislayers`. Use `arcgislayers::arc_open()`
+#' and `arcgislayers::get_layer()` to reach the features behind a map service.
+#'
 #' @inheritParams Service
 #' @param cached Bool. Whether the service is served from a tile cache.
-#' @param layers Data frame. The service's layers.
 #' @param export_tiles_allowed Bool. Whether clients may export cache tiles.
 #' @param max_export_tiles Double. Tile count ceiling for [export_tiles()].
 #' @returns A `MapServer` object.
@@ -61,7 +64,6 @@ MapServer <- S7::new_class(
   package = "arcgistiles",
   properties = list(
     cached = s7x::class_boolean,
-    layers = class_table,
     export_tiles_allowed = s7x::class_boolean,
     max_export_tiles = s7x::class_float
   )
@@ -92,7 +94,8 @@ VectorTileServer <- S7::new_class(
 
 #' Open a map service
 #'
-#' @param url String. URL of a `MapServer` endpoint.
+#' @param x A `MapServer` URL, a `MapServer` from `arcgislayers::arc_open()`,
+#'   or a `PortalItem` whose `url` points at one.
 #' @inheritParams arcgisutils::arc_base_req
 #' @returns A [MapServer] object.
 #' @family services
@@ -100,28 +103,25 @@ VectorTileServer <- S7::new_class(
 #' @examples
 #' \dontrun{
 #' map_server(world_imagery_url())
+#' map_server(arcgislayers::arc_open(world_imagery_url()))
 #' }
 map_server <- function(
-  url,
+  x,
   token = arcgisutils::arc_token(),
   error_call = rlang::caller_env()
 ) {
-  meta <- fetch_service(url, "MapServer", token, error_call)
-
-  extent <- as_extent_vec(meta[["fullExtent"]])
-  crs <- as_crs(meta[["spatialReference"]], call = error_call)
+  url <- service_url(x, "MapServer", call = error_call)
+  meta <- arcgisutils::fetch_layer_metadata(url, token, call = error_call)
 
   MapServer(
-    url = sub("/$", "", url),
+    url = url,
     metadata = meta,
     name = meta[["mapName"]] %||% NA_character_,
-    crs = crs,
-    full_extent = extent,
+    full_extent = service_extent(meta, error_call),
     tile_info = as_tile_info(meta[["tileInfo"]], call = error_call),
     capabilities = split_capabilities(meta[["capabilities"]]),
     token = token,
     cached = isTRUE(meta[["singleFusedMapCache"]]),
-    layers = as_layer_table(meta[["layers"]]),
     export_tiles_allowed = isTRUE(meta[["exportTilesAllowed"]]),
     max_export_tiles = as.double(meta[["maxExportTilesCount"]] %||% NA_real_)
   )
@@ -129,8 +129,9 @@ map_server <- function(
 
 #' Open a vector tile service
 #'
-#' @param url String. URL of a `VectorTileServer` endpoint.
-#' @inheritParams arcgisutils::arc_base_req
+#' @inheritParams map_server
+#' @param x A `VectorTileServer` URL, or a `PortalItem` whose `url` points at
+#'   one.
 #' @returns A [VectorTileServer] object.
 #' @family services
 #' @export
@@ -139,18 +140,18 @@ map_server <- function(
 #' vector_tile_server(open_street_map_url())
 #' }
 vector_tile_server <- function(
-  url,
+  x,
   token = arcgisutils::arc_token(),
   error_call = rlang::caller_env()
 ) {
-  meta <- fetch_service(url, "VectorTileServer", token, error_call)
+  url <- service_url(x, "VectorTileServer", call = error_call)
+  meta <- arcgisutils::fetch_layer_metadata(url, token, call = error_call)
 
   VectorTileServer(
-    url = sub("/$", "", url),
+    url = url,
     metadata = meta,
     name = meta[["name"]] %||% NA_character_,
-    crs = as_crs(meta[["tileInfo"]][["spatialReference"]], call = error_call),
-    full_extent = as_extent_vec(meta[["fullExtent"]]),
+    full_extent = service_extent(meta, error_call),
     tile_info = as_tile_info(meta[["tileInfo"]], call = error_call),
     capabilities = split_capabilities(meta[["capabilities"]]),
     token = token,
@@ -161,39 +162,62 @@ vector_tile_server <- function(
   )
 }
 
-fetch_service <- function(url, kind, token, call = rlang::caller_env()) {
-  check_string(url, allow_empty = FALSE, call = call)
+# arcgislayers services and portal items are both classed lists carrying a
+# `url`, so neither package has to depend on the other
+service_url <- function(x, kind, call = rlang::caller_env()) {
+  if (!is.character(x)) {
+    url <- x[["url"]]
 
-  if (!grepl(paste0("/", kind, "/?$"), url)) {
+    if (!rlang::is_string(url)) {
+      cli::cli_abort(
+        c(
+          "{.arg x} must be a URL, a {.cls {kind}}, or a {.cls PortalItem}.",
+          "i" = "{.cls {class(x)[1]}} carries no {.field url}."
+        ),
+        call = call
+      )
+    }
+
+    x <- url
+  }
+
+  check_string(x, allow_empty = FALSE, call = call)
+  x <- sub("/$", "", x)
+
+  if (!grepl(paste0("/", kind, "$"), x)) {
     cli::cli_abort(
-      "{.arg url} must point to a {.field {kind}} endpoint.",
+      "{.arg x} must point to a {.field {kind}} endpoint.",
       call = call
     )
   }
 
-  arc_json(url, token = token, query = list(f = "json"), call = call)
+  x
 }
 
-arc_json <- function(url, token, query = list(f = "json"), call = rlang::caller_env()) {
-  resp <- arcgisutils::arc_base_req(
-    url,
-    token,
-    query = query,
-    error_call = call
-  ) |>
-    httr2::req_perform(error_call = call)
+service_extent <- function(meta, call = rlang::caller_env()) {
+  extent <- meta[["fullExtent"]] %||% meta[["initialExtent"]]
 
-  res <- RcppSimdJson::fparse(httr2::resp_body_string(resp))
-  arcgisutils::detect_errors(res)
-  res
-}
-
-as_extent_vec <- function(x) {
-  if (is.null(x)) {
-    return(rep(NA_real_, 4L))
+  if (is.null(extent)) {
+    return(NULL)
   }
 
-  as.double(c(x[["xmin"]], x[["ymin"]], x[["xmax"]], x[["ymax"]]))
+  # an envelope often carries a bare `wkid`, which resolves to the ESRI
+  # authority rather than the EPSG code the service publishes as `latestWkid`
+  candidates <- compact(list(
+    meta[["spatialReference"]],
+    meta[["tileInfo"]][["spatialReference"]],
+    extent[["spatialReference"]]
+  ))
+
+  richest <- Position(
+    function(sr) !is.null(sr[["latestWkid"]]),
+    candidates,
+    nomatch = 1L
+  )
+
+  extent[["spatialReference"]] <- candidates[[richest]]
+
+  arcgisutils::from_envelope(extent, error_call = call)
 }
 
 split_capabilities <- function(x) {
@@ -204,39 +228,10 @@ split_capabilities <- function(x) {
   trimws(strsplit(as.character(x), ",", fixed = TRUE)[[1L]])
 }
 
-as_layer_table <- function(x) {
-  if (is.null(x) || length(x) == 0L) {
-    return(data.frame(id = integer(), name = character()))
-  }
-
-  if (!is.data.frame(x)) {
-    x <- rbind_rows(x)
-  }
-
-  x
-}
-
-#' Extent of a service
-#'
-#' @param x A [MapServer] or [VectorTileServer].
-#' @returns A `bbox`.
-#' @family services
-#' @export
-#' @examples
-#' \dontrun{
-#' service_bbox(map_server(world_imagery_url()))
-#' }
-service_bbox <- function(x) {
-  sf::st_bbox(
-    stats::setNames(x@full_extent, c("xmin", "ymin", "xmax", "ymax")),
-    crs = x@crs
-  )
-}
-
-print_service <- function(x) {
+S7::method(print, Service) <- function(x, ...) {
   cli::cli_text("{.cls {class(x)[1]}} {.val {x@name}}")
   cli::cli_text("{.url {x@url}}")
-  cli::cli_text("{.strong CRS:} {crs_label(x@crs)}")
+  cli::cli_text("{.strong CRS:} {x@crs$input %||% 'unknown'}")
 
   if (length(x@capabilities) > 0L) {
     cli::cli_text("{.strong Capabilities:} {.val {x@capabilities}}")
@@ -250,20 +245,6 @@ print_service <- function(x) {
     cli::cli_text(
       "{.strong Levels:} {min(levels)}-{max(levels)} at {info@cols}x{info@rows} {info@format}"
     )
-  }
-
-  invisible(x)
-}
-
-S7::method(print, Service) <- function(x, ...) {
-  print_service(x)
-}
-
-S7::method(print, MapServer) <- function(x, ...) {
-  print_service(x)
-
-  if (nrow(x@layers) > 0L) {
-    cli::cli_text("{.strong Layers:} {nrow(x@layers)}")
   }
 
   invisible(x)

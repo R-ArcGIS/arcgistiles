@@ -1,90 +1,57 @@
-# NULL leads the union so the generated constructor defaults to NULL rather
+#' @importFrom arcgisutils compact data_frame rbind_results
+NULL
+
+# NULL leads each union so the generated constructor defaults to NULL rather
 # than to an S3 class that has no constructor to deparse
-class_crs <- S7::new_union(NULL, S7::new_S3_class("crs"))
+class_bbox <- S7::new_union(NULL, S7::new_S3_class("bbox"))
 class_token <- S7::new_union(NULL, S7::new_S3_class("httr2_token"))
 
-class_table <- S7::new_property(
+# S7 would otherwise default a data.frame property to an undeparsable
+# constructor call, which R CMD check reports as a codoc mismatch
+class_data_frame <- S7::new_property(
   S7::class_data.frame,
   default = quote(data.frame())
 )
 
-`%||%` <- function(x, y) if (is.null(x)) y else x
-
-crs_label <- function(x) {
-  if (is.null(x) || is.na(x)) {
-    return("unknown")
-  }
-
-  x[["input"]] %||% format(x)
-}
-
-as_crs <- function(x, call = rlang::caller_env()) {
-  if (is.null(x)) {
-    return(sf::NA_crs_)
-  }
-
-  if (inherits(x, "crs")) {
-    return(x)
-  }
-
-  if (is.numeric(x) || is.character(x)) {
-    return(sf::st_crs(x))
-  }
-
-  wkid <- x[["latestWkid"]] %||% x[["wkid"]]
-
-  if (!is.null(wkid)) {
-    return(sf::st_crs(as.integer(wkid)))
-  }
-
-  wkt <- x[["wkt"]] %||% x[["wkt2"]]
-
-  if (!is.null(wkt)) {
-    return(sf::st_crs(wkt))
-  }
-
-  cli::cli_abort("Could not read a spatial reference.", call = call)
-}
-
 #' @importFrom sf st_bbox
-as_tile_bbox <- function(bbox, crs = NULL, call = rlang::caller_env()) {
-  if (!inherits(bbox, "bbox")) {
-    if (!is.numeric(bbox)) {
-      bbox <- tryCatch(
-        sf::st_bbox(bbox),
-        error = function(e) {
+as_bbox <- function(x, crs = NULL, call = rlang::caller_env()) {
+  if (!inherits(x, "bbox")) {
+    if (!is.numeric(x)) {
+      x <- rlang::try_fetch(
+        sf::st_bbox(x),
+        error = function(cnd) {
           cli::cli_abort(
             "{.arg bbox} must be a {.cls bbox} or a length four numeric.",
             call = call
           )
         }
       )
-    } else if (length(bbox) != 4L) {
+    } else if (length(x) != 4L) {
       cli::cli_abort(
         "{.arg bbox} must be a {.cls bbox} or a length four numeric.",
         call = call
       )
     } else {
-      bbox <- sf::st_bbox(
-        stats::setNames(as.double(bbox), c("xmin", "ymin", "xmax", "ymax")),
+      x <- sf::st_bbox(
+        stats::setNames(as.double(x), c("xmin", "ymin", "xmax", "ymax")),
         crs = crs
       )
     }
   }
 
   if (is.null(crs) || is.na(crs)) {
-    return(bbox)
+    return(x)
   }
 
-  if (is.na(sf::st_crs(bbox))) {
-    return(sf::st_bbox(stats::setNames(as.double(bbox), names(bbox)), crs = crs))
+  if (is.na(sf::st_crs(x))) {
+    return(sf::st_bbox(stats::setNames(as.double(x), names(x)), crs = crs))
   }
 
-  if (sf::st_crs(bbox) == crs) {
-    return(bbox)
+  if (sf::st_crs(x) == crs) {
+    return(x)
   }
 
-  sf::st_bbox(sf::st_transform(sf::st_as_sfc(bbox), crs))
+  sf::st_bbox(sf::st_transform(sf::st_as_sfc(x), crs))
 }
 
 check_size <- function(size, call = rlang::caller_env()) {
@@ -104,33 +71,25 @@ check_size <- function(size, call = rlang::caller_env()) {
   size
 }
 
-recycle_common <- function(..., call = rlang::caller_env()) {
-  args <- list(...)
-  sizes <- unique(lengths(args))
-  n <- max(sizes)
 
-  if (!all(sizes %in% c(1L, n))) {
-    cli::cli_abort(
-      "Arguments must be length 1 or {n}, not {.val {sizes}}.",
-      call = call
-    )
-  }
+arc_get <- function(
+  url,
+  token = NULL,
+  path = NULL,
+  query = NULL,
+  call = rlang::caller_env()
+) {
+  resp <- arcgisutils::arc_base_req(
+    url,
+    token,
+    path = as.character(path),
+    query = c(query, list(f = "json")),
+    error_call = call
+  ) |>
+    httr2::req_perform(error_call = call)
 
-  lapply(args, function(x) if (length(x) == n) x else rep_len(x, n))
-}
-
-rbind_rows <- function(x) {
-  do_rbind(lapply(x, as.data.frame))
-}
-
-do_rbind <- function(x) {
-  Reduce(function(a, b) rbind(a, b), x)
-}
-
-compact <- function(x) {
-  x[!vapply(x, is.null, logical(1))]
-}
-
-collapse_num <- function(x) {
-  paste0(format(x, scientific = FALSE, trim = TRUE), collapse = ",")
+  arcgisutils::detect_errors(
+    RcppSimdJson::fparse(httr2::resp_body_string(resp)),
+    error_call = call
+  )
 }

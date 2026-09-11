@@ -1,95 +1,47 @@
 #' @include services.R
 NULL
 
-#' Basemap styles service URL
-#'
-#' @returns The base URL of the basemap styles service, from the
-#'   `arcgistiles.basemap_url` option.
-#' @family basemaps
-#' @export
-#' @examples
-#' basemap_url()
-basemap_url <- function() {
-  getOption(
-    "arcgistiles.basemap_url",
-    "https://basemapstyles-api.arcgis.com/arcgis/rest/services/styles/v2"
-  )
-}
+# the basemap styles service is an ArcGIS Location Platform endpoint with no
+# enterprise equivalent, so the host is fixed rather than derived from a portal
+basemap_api <- "https://basemapstyles-api.arcgis.com/arcgis/rest/services/styles/v2"
 
 #' Available basemap styles
 #'
-#' Lists the styles the basemap styles service publishes. No token is required.
+#' Lists the styles the basemap styles service publishes, along with the label
+#' languages and worldviews they accept. No token is required.
 #'
 #' @param family String or [style_family()]. Restrict to one style family.
 #' @inheritParams tile_grid
 #' @returns A data frame with one row per style, including its `path`, `name`,
-#'   `styleFamily`, and `group`.
+#'   `styleFamily`, and `group`. The `languages` and `worldviews` attributes
+#'   hold the codes accepted by [basemap_style()].
 #' @family basemaps
 #' @export
 #' @examples
 #' \dontrun{
-#' basemap_styles("arcgis")
+#' styles <- basemap_styles("arcgis")
+#' attr(styles, "languages")
 #' }
 basemap_styles <- function(family = NULL, error_call = rlang::caller_env()) {
-  styles <- basemap_self(error_call = error_call)[["styles"]]
-
-  if (is.null(family)) {
-    return(styles)
-  }
-
-  family <- as.character(style_family(as.character(family)))
-  styles[styles[["styleFamily"]] == family, , drop = FALSE]
-}
-
-#' Basemap styles service metadata
-#'
-#' The service's own description of the styles, languages, worldviews, and
-#' places it supports. No token is required.
-#'
-#' @inheritParams tile_grid
-#' @returns A list.
-#' @family basemaps
-#' @export
-#' @examples
-#' \dontrun{
-#' names(basemap_self())
-#' }
-basemap_self <- function(error_call = rlang::caller_env()) {
-  arc_json(
-    paste0(basemap_url(), "/styles/self"),
-    token = NULL,
+  self <- arc_get(
+    basemap_api,
+    path = c("styles", "self"),
     call = error_call
   )
-}
 
-#' Basemap label languages
-#'
-#' @inheritParams tile_grid
-#' @returns A data frame with `code` and `name` columns.
-#' @family basemaps
-#' @export
-#' @examples
-#' \dontrun{
-#' basemap_languages()
-#' }
-basemap_languages <- function(error_call = rlang::caller_env()) {
-  basemap_self(error_call = error_call)[["languages"]]
-}
+  styles <- self[["styles"]]
 
-#' Basemap worldviews
-#'
-#' The boundary and label treatments a style can be requested with.
-#'
-#' @inheritParams tile_grid
-#' @returns A data frame with `code` and `name` columns.
-#' @family basemaps
-#' @export
-#' @examples
-#' \dontrun{
-#' basemap_worldviews()
-#' }
-basemap_worldviews <- function(error_call = rlang::caller_env()) {
-  basemap_self(error_call = error_call)[["worldviews"]]
+  if (!is.null(family)) {
+    family <- as.character(style_family(as.character(family)))
+    styles <- styles[styles[["styleFamily"]] == family, , drop = FALSE]
+    row.names(styles) <- NULL
+  }
+
+  structure(
+    data_frame(styles),
+    languages = data_frame(self[["languages"]]),
+    worldviews = data_frame(self[["worldviews"]])
+  )
 }
 
 #' Fetch a basemap style
@@ -101,8 +53,10 @@ basemap_worldviews <- function(error_call = rlang::caller_env()) {
 #' @param style String. A style path such as `"arcgis/navigation"`, or a bare
 #'   style name, in which case `family` supplies the family.
 #' @param family String or [style_family()]. Used when `style` has no family.
-#' @param language String. Label language code, from [basemap_languages()].
-#' @param worldview String. Worldview code, from [basemap_worldviews()].
+#' @param language String. Label language code, from the `languages` attribute
+#'   of [basemap_styles()].
+#' @param worldview String. Worldview code controlling how disputed boundaries
+#'   are drawn, from the `worldviews` attribute of [basemap_styles()].
 #' @param places String or [places()]. Which place labels to include.
 #' @inheritParams arcgisutils::arc_base_req
 #' @returns A list holding the style document.
@@ -121,11 +75,15 @@ basemap_style <- function(
   token = arcgisutils::arc_token(),
   error_call = rlang::caller_env()
 ) {
-  arc_json(
-    paste0(basemap_url(), "/styles/", style_path(style, family, error_call)),
-    token = token,
-    query = style_query(language, worldview, places, error_call),
-    call = error_call
+  basemap_document(
+    "styles",
+    style,
+    family,
+    language,
+    worldview,
+    places,
+    token,
+    error_call
   )
 }
 
@@ -150,11 +108,46 @@ basemap_webmap <- function(
   token = arcgisutils::arc_token(),
   error_call = rlang::caller_env()
 ) {
-  arc_json(
-    paste0(basemap_url(), "/webmaps/", style_path(style, family, error_call)),
-    token = token,
-    query = style_query(language, worldview, places, error_call),
-    call = error_call
+  basemap_document(
+    "webmaps",
+    style,
+    family,
+    language,
+    worldview,
+    places,
+    token,
+    error_call
+  )
+}
+
+basemap_document <- function(
+  kind,
+  style,
+  family,
+  language,
+  worldview,
+  places,
+  token,
+  call = rlang::caller_env()
+) {
+  check_string(style, allow_empty = FALSE, call = call)
+  check_string(language, allow_null = TRUE, allow_empty = FALSE, call = call)
+  check_string(worldview, allow_null = TRUE, allow_empty = FALSE, call = call)
+
+  if (!grepl("/", style, fixed = TRUE)) {
+    style <- paste0(as.character(style_family(as.character(family))), "/", style)
+  }
+
+  arc_get(
+    basemap_api,
+    token,
+    path = c(kind, strsplit(style, "/", fixed = TRUE)[[1L]]),
+    query = compact(list(
+      language = language,
+      worldview = worldview,
+      places = if (!is.null(places)) as.character(places(as.character(places)))
+    )),
+    call = call
   )
 }
 
@@ -190,14 +183,6 @@ basemap_tile_server <- function(
     error_call = error_call
   )
 
-  vector_tile_server(
-    style_source_url(doc, error_call),
-    token = token,
-    error_call = error_call
-  )
-}
-
-style_source_url <- function(doc, call = rlang::caller_env()) {
   urls <- vapply(
     doc[["sources"]] %||% list(),
     function(s) s[["url"]] %||% NA_character_,
@@ -209,11 +194,11 @@ style_source_url <- function(doc, call = rlang::caller_env()) {
   if (length(urls) == 0L) {
     cli::cli_abort(
       "The style has no vector tile service source.",
-      call = call
+      call = error_call
     )
   }
 
-  sub("/$", "", urls[[1L]])
+  vector_tile_server(urls[[1L]], token = token, error_call = error_call)
 }
 
 #' Start a basemap session
@@ -239,36 +224,14 @@ basemap_session <- function(
 ) {
   check_number_whole(duration, min = 1, call = error_call)
 
-  arc_json(
-    paste0(basemap_url(), "/sessions/start"),
-    token = token,
+  arc_get(
+    basemap_api,
+    token,
+    path = c("sessions", "start"),
     query = list(
       styleFamily = as.character(style_family(as.character(family))),
-      durationSeconds = as.integer(duration),
-      f = "json"
+      durationSeconds = as.integer(duration)
     ),
     call = error_call
   )
-}
-
-style_path <- function(style, family, call = rlang::caller_env()) {
-  check_string(style, allow_empty = FALSE, call = call)
-
-  if (grepl("/", style, fixed = TRUE)) {
-    return(style)
-  }
-
-  paste0(as.character(style_family(as.character(family))), "/", style)
-}
-
-style_query <- function(language, worldview, places, call = rlang::caller_env()) {
-  check_string(language, allow_null = TRUE, allow_empty = FALSE, call = call)
-  check_string(worldview, allow_null = TRUE, allow_empty = FALSE, call = call)
-
-  compact(list(
-    language = language,
-    worldview = worldview,
-    places = if (!is.null(places)) as.character(places(as.character(places))),
-    f = "json"
-  ))
 }

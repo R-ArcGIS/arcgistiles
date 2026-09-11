@@ -51,7 +51,7 @@ georeference <- function(path, ext, crs) {
   r <- suppressWarnings(terra::rast(path))
 
   terra::ext(r) <- terra::ext(ext[["xmin"]], ext[["xmax"]], ext[["ymin"]], ext[["ymax"]])
-  terra::crs(r) <- crs_wkt(crs)
+  terra::crs(r) <- if (is.na(crs)) "" else crs[["wkt"]]
 
   r
 }
@@ -68,14 +68,6 @@ name_bands <- function(x) {
   )
 
   x
-}
-
-crs_wkt <- function(crs) {
-  if (is.null(crs) || is.na(crs)) {
-    return("")
-  }
-
-  crs[["wkt"]]
 }
 
 check_terra <- function(call = rlang::caller_env()) {

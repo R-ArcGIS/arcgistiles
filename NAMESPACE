@@ -8,15 +8,11 @@ export(TileInfo)
 export(TileSet)
 export(VectorTileServer)
 export(as_rast)
-export(basemap_languages)
-export(basemap_self)
 export(basemap_session)
 export(basemap_style)
 export(basemap_styles)
 export(basemap_tile_server)
-export(basemap_url)
 export(basemap_webmap)
-export(basemap_worldviews)
 export(census_url)
 export(estimate_export_tiles_size)
 export(export_by)
@@ -25,7 +21,6 @@ export(export_tiles)
 export(export_tiles_job)
 export(get_tiles)
 export(get_vector_tiles)
-export(image_bbox)
 export(image_format)
 export(job_await)
 export(job_messages)
@@ -41,7 +36,6 @@ export(map_server)
 export(open_street_map_url)
 export(places)
 export(read_vector_tiles)
-export(service_bbox)
 export(storage_format)
 export(style_family)
 export(tile_extent)
@@ -67,6 +61,11 @@ importFrom(S7,
   new_class,
   new_property,
   prop
+)
+importFrom(arcgisutils,
+  compact,
+  data_frame,
+  rbind_results
 )
 importFrom(s7x,
   class_string,

@@ -20,9 +20,11 @@ style name, in which case \code{family} supplies the family.}
 
 \item{family}{String or \code{\link[=style_family]{style_family()}}. Used when \code{style} has no family.}
 
-\item{language}{String. Label language code, from \code{\link[=basemap_languages]{basemap_languages()}}.}
+\item{language}{String. Label language code, from the \code{languages} attribute
+of \code{\link[=basemap_styles]{basemap_styles()}}.}
 
-\item{worldview}{String. Worldview code, from \code{\link[=basemap_worldviews]{basemap_worldviews()}}.}
+\item{worldview}{String. Worldview code controlling how disputed boundaries
+are drawn, from the \code{worldviews} attribute of \code{\link[=basemap_styles]{basemap_styles()}}.}
 
 \item{places}{String or \code{\link[=places]{places()}}. Which place labels to include.}
 
@@ -45,13 +47,9 @@ basemap_tile_server("arcgis/navigation")
 }
 \seealso{
 Other basemaps:
-\code{\link[=basemap_languages]{basemap_languages()}},
-\code{\link[=basemap_self]{basemap_self()}},
 \code{\link[=basemap_session]{basemap_session()}},
 \code{\link[=basemap_style]{basemap_style()}},
 \code{\link[=basemap_styles]{basemap_styles()}},
-\code{\link[=basemap_url]{basemap_url()}},
-\code{\link[=basemap_webmap]{basemap_webmap()}},
-\code{\link[=basemap_worldviews]{basemap_worldviews()}}
+\code{\link[=basemap_webmap]{basemap_webmap()}}
 }
 \concept{basemaps}

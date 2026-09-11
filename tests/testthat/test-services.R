@@ -33,7 +33,7 @@ test_that("a vector tile service reports pbf tiles", {
 test_that("a service bounding box carries its crs", {
   skip_if_no_network()
 
-  bbox <- service_bbox(map_server(world_imagery_url()))
+  bbox <- map_server(world_imagery_url())@full_extent
 
   expect_s3_class(bbox, "bbox")
   expect_false(is.na(sf::st_crs(bbox)))

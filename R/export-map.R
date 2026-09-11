@@ -8,8 +8,7 @@ NULL
 #' ratio of `size`.
 #'
 #' @param path String. Path to the image on disk.
-#' @param bbox Numeric. Length four `c(xmin, ymin, xmax, ymax)` of the image.
-#' @param crs Coordinate reference system of the image.
+#' @param bbox A `bbox` holding the extent and CRS of the image.
 #' @param size Integer. Length two `c(width, height)` in pixels.
 #' @param format String. Image format.
 #' @param scale Double. Map scale the image was rendered at.
@@ -21,18 +20,20 @@ MapImage <- S7::new_class(
   package = "arcgistiles",
   properties = list(
     path = s7x::class_string,
-    bbox = S7::class_double,
-    crs = class_crs,
+    bbox = class_bbox,
     size = S7::class_integer,
     format = s7x::class_string,
-    scale = s7x::class_float
+    scale = s7x::class_float,
+    crs = S7::new_property(
+      getter = function(self) sf::st_crs(self@bbox)
+    )
   )
 )
 
 S7::method(print, MapImage) <- function(x, ...) {
   cli::cli_text("{.cls MapImage} {x@size[1]}x{x@size[2]} {x@format}")
-  cli::cli_text("{.strong CRS:} {crs_label(x@crs)}")
-  cli::cli_text("{.strong Extent:} {.val {x@bbox}}")
+  cli::cli_text("{.strong CRS:} {x@crs$input %||% 'unknown'}")
+  cli::cli_text("{.strong Extent:} {.val {as.double(x@bbox)}}")
   cli::cli_text("{.file {x@path}}")
 
   invisible(x)
@@ -41,28 +42,7 @@ S7::method(print, MapImage) <- function(x, ...) {
 S7::method(as_rast, MapImage) <- function(x, ...) {
   check_terra()
 
-  name_bands(georeference(
-    x@path,
-    c(xmin = x@bbox[1L], xmax = x@bbox[3L], ymin = x@bbox[2L], ymax = x@bbox[4L]),
-    x@crs
-  ))
-}
-
-#' Bounding box of a map image
-#'
-#' @param x A [MapImage].
-#' @returns A `bbox`.
-#' @family map images
-#' @export
-#' @examples
-#' \dontrun{
-#' image_bbox(export_map(ms, bbox))
-#' }
-image_bbox <- function(x) {
-  sf::st_bbox(
-    stats::setNames(x@bbox, c("xmin", "ymin", "xmax", "ymax")),
-    crs = x@crs
-  )
+  name_bands(georeference(x@path, x@bbox, x@crs))
 }
 
 #' Export a map image
@@ -119,84 +99,67 @@ export_map <- function(
   size <- check_size(size, call = error_call)
 
   query <- compact(c(
-    bbox_query(bbox, x@crs, error_call),
+    bbox_query(bbox, error_call),
     list(
-      size = collapse_num(size),
+      size = toString(size),
       format = format,
       transparent = tolower(transparent),
       dpi = as.integer(dpi),
-      imageSR = crs_wkid(crs, required = TRUE, call = error_call),
+      imageSR = arcgisutils::validate_crs(
+        crs,
+        call = error_call
+      )[["spatialReference"]][["wkid"]],
       layers = layer_query(layers, visibility, error_call),
       layerDefs = layer_defs_query(layer_defs, error_call),
       rotation = if (!is.null(rotation)) as.double(rotation),
-      time = if (!is.null(time)) collapse_num(time),
+      time = if (!is.null(time)) toString(time),
       f = "json"
     ),
     list(...)
   ))
 
-  res <- arc_json(
-    paste0(x@url, "/export"),
-    token = x@token,
+  res <- arc_get(
+    x@url,
+    x@token,
+    path = "export",
     query = query,
     call = error_call
   )
 
+  if (is.null(res[["href"]])) {
+    cli::cli_abort(
+      c(
+        "The service did not return an image.",
+        "i" = "It may not support the {.path /export} operation."
+      ),
+      call = error_call
+    )
+  }
+
   file <- file %||% tempfile(fileext = paste0(".", image_file_ext(format)))
-  download_href(res[["href"]], file, x@token, error_call)
+
+  arcgisutils::arc_base_req(res[["href"]], x@token, error_call = error_call) |>
+    httr2::req_perform(path = file, error_call = error_call)
 
   MapImage(
     path = file,
-    bbox = as_extent_vec(res[["extent"]]),
-    crs = as_crs(res[["extent"]][["spatialReference"]], call = error_call),
+    bbox = arcgisutils::from_envelope(res[["extent"]], error_call = error_call),
     size = c(as.integer(res[["width"]]), as.integer(res[["height"]])),
     format = format,
     scale = as.double(res[["scale"]] %||% NA_real_)
   )
 }
 
-# a bbox whose crs has no EPSG code cannot be named in a query, so send it in
-# the service's own crs instead
-bbox_query <- function(bbox, service_crs = NULL, call = rlang::caller_env()) {
-  bbox <- as_tile_bbox(bbox, call = call)
-  wkid <- crs_wkid(sf::st_crs(bbox), call = call)
-
-  if (is.null(wkid) && !is.null(service_crs) && !is.na(sf::st_crs(bbox))) {
-    bbox <- as_tile_bbox(bbox, service_crs, call = call)
-    wkid <- crs_wkid(service_crs, call = call)
-  }
+bbox_query <- function(bbox, call = rlang::caller_env()) {
+  bbox <- as_bbox(bbox, call = call)
 
   list(
-    bbox = collapse_num(as.double(bbox)),
-    bboxSR = wkid
+    bbox = toString(as.double(bbox)),
+    bboxSR = arcgisutils::validate_crs(
+      sf::st_crs(bbox),
+      call = call
+    )[["spatialReference"]][["wkid"]]
   )
-}
-
-crs_wkid <- function(crs, required = FALSE, call = rlang::caller_env()) {
-  if (is.null(crs)) {
-    return(NULL)
-  }
-
-  crs <- as_crs(crs, call = call)
-
-  if (is.na(crs)) {
-    return(NULL)
-  }
-
-  epsg <- sf::st_crs(crs)$epsg
-
-  if (is.null(epsg) || is.na(epsg)) {
-    if (required) {
-      cli::cli_abort(
-        "{.arg crs} must have an EPSG code to send to the service.",
-        call = call
-      )
-    }
-
-    return(NULL)
-  }
-
-  as.integer(epsg)
 }
 
 layer_query <- function(layers, visibility, call = rlang::caller_env()) {
@@ -211,7 +174,7 @@ layer_query <- function(layers, visibility, call = rlang::caller_env()) {
   paste0(
     as.character(layer_visibility(as.character(visibility))),
     ":",
-    collapse_num(as.integer(layers))
+    toString(as.integer(layers))
   )
 }
 
@@ -228,23 +191,6 @@ layer_defs_query <- function(layer_defs, call = rlang::caller_env()) {
   }
 
   yyjsonr::write_json_str(as.list(layer_defs), auto_unbox = TRUE)
-}
-
-download_href <- function(href, file, token, call = rlang::caller_env()) {
-  if (is.null(href)) {
-    cli::cli_abort(
-      c(
-        "The service did not return an image.",
-        "i" = "It may not support the {.path /export} operation."
-      ),
-      call = call
-    )
-  }
-
-  arcgisutils::arc_base_req(href, token, error_call = call) |>
-    httr2::req_perform(path = file, error_call = call)
-
-  invisible(file)
 }
 
 image_file_ext <- function(format) {

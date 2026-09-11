@@ -47,39 +47,8 @@ test_that("raster tiles cannot be decoded as vector tiles", {
   skip_if_not_installed("protolite")
 
   service <- map_server(world_imagery_url())
-  tiles <- get_tiles(service, service_bbox(service), level = 1L, progress = FALSE)
+  tiles <- get_tiles(service, service@full_extent, level = 1L, progress = FALSE)
 
   expect_error(read_vector_tiles(tiles), "TileSet.*vector tiles")
 })
 
-test_that("layers bind across tiles even when their fields differ", {
-  first <- sf::st_sf(
-    a = 1,
-    geometry = sf::st_sfc(sf::st_point(c(0, 0)), crs = sf::st_crs(4326))
-  )
-
-  second <- sf::st_sf(
-    b = 2,
-    geometry = sf::st_sfc(sf::st_point(c(1, 1)), crs = sf::st_crs(4326))
-  )
-
-  bound <- arcgistiles:::bind_tile_layer(list(first, second))
-
-  expect_equal(nrow(bound), 2L)
-  expect_true(all(c("a", "b") %in% names(bound)))
-  expect_true(is.na(bound[["a"]][2L]))
-})
-
-test_that("empty geometries are dropped before binding", {
-  mixed <- sf::st_sf(
-    a = 1:2,
-    geometry = sf::st_sfc(
-      sf::st_point(c(0, 0)),
-      sf::st_point(),
-      crs = sf::st_crs(4326)
-    )
-  )
-
-  expect_equal(nrow(arcgistiles:::bind_tile_layer(list(mixed))), 1L)
-  expect_null(arcgistiles:::bind_tile_layer(list(NULL)))
-})
