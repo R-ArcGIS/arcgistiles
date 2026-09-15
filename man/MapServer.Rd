@@ -48,6 +48,14 @@ A \code{MapServer} endpoint. Use \code{\link[=map_server]{map_server()}} to crea
 Layer level access belongs to \code{arcgislayers}. Use \code{arcgislayers::arc_open()}
 and \code{arcgislayers::get_layer()} to reach the features behind a map service.
 }
+\examples{
+\dontshow{if (curl::has_internet()) withAutoprint(\{ # examplesIf}
+ms <- map_server(world_imagery_url())
+
+ms@full_extent
+ms@cached
+\dontshow{\}) # examplesIf}
+}
 \seealso{
 Other services:
 \code{\link[=Service]{Service()}},

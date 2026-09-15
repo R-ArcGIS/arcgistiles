@@ -39,7 +39,8 @@ Splits \code{bbox} into a regular grid of page extents, the starting point for a
 map series.
 }
 \examples{
-map_grid(c(-104, 35.6, -94.32, 41), nrow = 2, ncol = 3)
+# six pages sharing a 5 percent margin
+map_grid(c(-104, 35.6, -94.32, 41), nrow = 2, ncol = 3, overlap = 0.05)
 }
 \seealso{
 Other map series:

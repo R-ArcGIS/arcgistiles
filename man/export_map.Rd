@@ -30,7 +30,8 @@ numeric \code{c(xmin, ymin, xmax, ymax)}.}
 
 \item{size}{Integer. Length two \code{c(width, height)} in pixels.}
 
-\item{format}{String or \code{\link[=image_format]{image_format()}}. Output image format.}
+\item{format}{String or \code{\link[=image_format]{image_format()}}. Output image format. \code{"png"} is
+a single paletted band, so use \code{"png32"} for RGBA bands.}
 
 \item{file}{String. Where to write the image. Defaults to a temporary file.}
 
@@ -67,10 +68,18 @@ requested extent to the aspect ratio of \code{size}, so the returned
 \link{MapImage} carries the extent that was actually drawn.
 }
 \examples{
-\dontrun{
+\dontshow{if (curl::has_internet()) withAutoprint(\{ # examplesIf}
 ms <- map_server(census_url())
-export_map(ms, c(-104, 35.6, -94.32, 41), size = c(600, 400))
-}
+
+# counties layer only, filtered to the large ones
+export_map(
+  ms,
+  c(-104, 35.6, -94.32, 41),
+  size = c(600, 400),
+  layers = 3,
+  layer_defs = list(`3` = "POP2000 > 1000000")
+)
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 Other map images:

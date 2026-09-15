@@ -17,7 +17,8 @@ NULL
 #' @family map series
 #' @export
 #' @examples
-#' map_grid(c(-104, 35.6, -94.32, 41), nrow = 2, ncol = 3)
+#' # six pages sharing a 5 percent margin
+#' map_grid(c(-104, 35.6, -94.32, 41), nrow = 2, ncol = 3, overlap = 0.05)
 map_grid <- function(
   bbox,
   nrow = 2L,
@@ -73,12 +74,12 @@ map_grid <- function(
 #'   `path`, `ok`, `extent`, and `scale`. `extent` is what the server drew.
 #' @family map series
 #' @export
-#' @examples
-#' \dontrun{
+#' @examplesIf curl::has_internet()
 #' ms <- map_server(census_url())
-#' pages <- map_grid(c(-104, 35.6, -94.32, 41), nrow = 2, ncol = 2)
-#' map_series(ms, pages, size = c(800, 600))
-#' }
+#' pages <- map_grid(c(-104, 35.6, -94.32, 41), nrow = 1, ncol = 2)
+#'
+#' # every page comes back at the same scale, which is the point of a series
+#' map_series(ms, pages, size = c(400, 300), progress = FALSE)
 map_series <- function(
   x,
   pages,

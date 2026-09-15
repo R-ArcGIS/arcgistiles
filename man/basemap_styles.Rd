@@ -24,10 +24,12 @@ Lists the styles the basemap styles service publishes, along with the label
 languages and worldviews they accept. No token is required.
 }
 \examples{
-\dontrun{
+\dontshow{if (curl::has_internet()) withAutoprint(\{ # examplesIf}
 styles <- basemap_styles("arcgis")
-attr(styles, "languages")
-}
+
+head(styles[c("path", "name", "group")])
+head(attr(styles, "languages"))
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 Other basemaps:

@@ -10,8 +10,8 @@ vts@max_export_tiles
 job <- export_tiles_job(vts, vts@full_extent, levels = 0:2)
 job
 
-job_await(job, interval = 2, timeout = 600)
-job_status(job)
+job$await(interval = 2, timeout = 600)
+job$status
 
 package <- write_tile_package(job)
 file.size(package)

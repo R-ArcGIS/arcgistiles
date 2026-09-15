@@ -32,7 +32,7 @@ dataset. Map services only.}
 
 \item{area_of_interest}{An \code{sf} or \code{sfc} polygon. Supersedes \code{bbox}.}
 
-\item{interval}{Double. Seconds between polls.}
+\item{interval}{Double. Seconds between status polls.}
 
 \item{timeout}{Double. Seconds to wait before giving up.}
 
@@ -50,18 +50,15 @@ download size instead of tiles. Map services only.
 }
 \examples{
 \dontrun{
-estimate_export_tiles_size(ms, service_bbox(ms), levels = 0:5)
+ms <- map_server(world_imagery_url())
+
+estimate_export_tiles_size(ms, ms@full_extent, levels = 0:5)
 }
 }
 \seealso{
 Other tile export:
-\code{\link[=TileExportJob]{TileExportJob()}},
 \code{\link[=export_tiles]{export_tiles()}},
 \code{\link[=export_tiles_job]{export_tiles_job()}},
-\code{\link[=job_await]{job_await()}},
-\code{\link[=job_messages]{job_messages()}},
-\code{\link[=job_result]{job_result()}},
-\code{\link[=job_status]{job_status()}},
 \code{\link[=write_tile_package]{write_tile_package()}}
 }
 \concept{tile export}

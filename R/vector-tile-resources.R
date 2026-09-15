@@ -12,10 +12,10 @@ NULL
 #' @returns A list holding the style document.
 #' @family vector tiles
 #' @export
-#' @examples
-#' \dontrun{
-#' vector_tile_style(vector_tile_server(open_street_map_url()))
-#' }
+#' @examplesIf curl::has_internet()
+#' style <- vector_tile_style(vector_tile_server(open_street_map_url()))
+#'
+#' style$glyphs
 vector_tile_style <- function(x, error_call = rlang::caller_env()) {
   path <- strsplit(x@default_styles, "/", fixed = TRUE)[[1L]]
   style <- arcgisutils::fetch_layer_metadata(x@url, x@token, path = path, call = error_call)
@@ -51,10 +51,8 @@ vector_tile_style <- function(x, error_call = rlang::caller_env()) {
 #' @returns A character vector of resource paths relative to the service.
 #' @family vector tiles
 #' @export
-#' @examples
-#' \dontrun{
-#' vector_tile_resources(vector_tile_server(open_street_map_url()))
-#' }
+#' @examplesIf curl::has_internet()
+#' head(vector_tile_resources(vector_tile_server(open_street_map_url())))
 vector_tile_resources <- function(x, error_call = rlang::caller_env()) {
   res <- arcgisutils::fetch_layer_metadata(x@url, x@token, path = c("resources", "info"), call = error_call)
 
@@ -69,10 +67,8 @@ vector_tile_resources <- function(x, error_call = rlang::caller_env()) {
 #' @returns A character vector of font stack names.
 #' @family vector tiles
 #' @export
-#' @examples
-#' \dontrun{
-#' vector_tile_fonts(vector_tile_server(open_street_map_url()))
-#' }
+#' @examplesIf curl::has_internet()
+#' head(vector_tile_fonts(vector_tile_server(open_street_map_url())))
 vector_tile_fonts <- function(x, error_call = rlang::caller_env()) {
   resources <- vector_tile_resources(x, error_call = error_call)
   fonts <- grep("fonts/", resources, fixed = TRUE, value = TRUE)
@@ -90,10 +86,8 @@ vector_tile_fonts <- function(x, error_call = rlang::caller_env()) {
 #' @returns A named character vector with the `json` and `png` paths.
 #' @family vector tiles
 #' @export
-#' @examples
-#' \dontrun{
+#' @examplesIf curl::has_internet()
 #' vector_tile_sprite(vector_tile_server(open_street_map_url()))
-#' }
 vector_tile_sprite <- function(
   x,
   dir = tempfile("sprite"),
@@ -137,11 +131,10 @@ vector_tile_sprite <- function(
 #' @returns The path to the downloaded `.pbf` file.
 #' @family vector tiles
 #' @export
-#' @examples
-#' \dontrun{
+#' @examplesIf curl::has_internet()
 #' vts <- vector_tile_server(open_street_map_url())
+#'
 #' vector_tile_font(vts, vector_tile_fonts(vts)[1], "0-255")
-#' }
 vector_tile_font <- function(
   x,
   font,
@@ -187,10 +180,9 @@ vector_tile_font <- function(
 #' @returns A data frame with columns `level`, `row`, `col`, and `available`.
 #' @family tiles
 #' @export
-#' @examples
-#' \dontrun{
+#' @examplesIf curl::has_internet()
+#' # which of a 4x4 block of level 6 tiles the cache actually holds
 #' tilemap(map_server(world_imagery_url()), 6L, 24L, 18L, 4L, 4L)
-#' }
 tilemap <- function(
   x,
   level,

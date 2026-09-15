@@ -18,9 +18,9 @@ A \link{TileInfo} object.
 Tiling scheme of a service
 }
 \examples{
-\dontrun{
+\dontshow{if (curl::has_internet()) withAutoprint(\{ # examplesIf}
 tile_info(map_server(world_imagery_url()))
-}
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 Other tiling scheme:

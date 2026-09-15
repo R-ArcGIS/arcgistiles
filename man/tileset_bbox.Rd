@@ -16,9 +16,13 @@ A \code{bbox} covering every tile that downloaded successfully.
 Bounding box of a tile set
 }
 \examples{
-\dontrun{
-tileset_bbox(get_tiles(map_server(world_imagery_url()), bbox, 6L))
-}
+\dontshow{if (curl::has_internet()) withAutoprint(\{ # examplesIf}
+ms <- map_server(world_imagery_url())
+boston <- wk::rct(-71.2, 42.3, -71.0, 42.4, crs = 4326)
+
+# wider than the requested box, because whole tiles are downloaded
+tileset_bbox(get_tiles(ms, boston, level = 10L, progress = FALSE))
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 Other tiles:

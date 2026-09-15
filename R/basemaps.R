@@ -17,11 +17,11 @@ basemap_api <- "https://basemapstyles-api.arcgis.com/arcgis/rest/services/styles
 #'   hold the codes accepted by [basemap_style()].
 #' @family basemaps
 #' @export
-#' @examples
-#' \dontrun{
+#' @examplesIf curl::has_internet()
 #' styles <- basemap_styles("arcgis")
-#' attr(styles, "languages")
-#' }
+#'
+#' head(styles[c("path", "name", "group")])
+#' head(attr(styles, "languages"))
 basemap_styles <- function(family = NULL, error_call = rlang::caller_env()) {
   self <- arcgisutils::fetch_layer_metadata(
     basemap_api,

@@ -26,10 +26,9 @@ A \link{MapServer} object.
 Open a map service
 }
 \examples{
-\dontrun{
+\dontshow{if (curl::has_internet()) withAutoprint(\{ # examplesIf}
 map_server(world_imagery_url())
-map_server(arcgislayers::arc_open(world_imagery_url()))
-}
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 Other services:

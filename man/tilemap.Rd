@@ -34,9 +34,10 @@ Asks a service which tiles in a block actually exist in its cache. Only
 services whose capabilities include \code{Tilemap} support this.
 }
 \examples{
-\dontrun{
+\dontshow{if (curl::has_internet()) withAutoprint(\{ # examplesIf}
+# which of a 4x4 block of level 6 tiles the cache actually holds
 tilemap(map_server(world_imagery_url()), 6L, 24L, 18L, 4L, 4L)
-}
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 Other tiles:

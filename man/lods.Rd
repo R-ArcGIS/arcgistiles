@@ -17,9 +17,9 @@ A data frame with columns \code{level}, \code{resolution}, \code{scale},
 The levels of a tiling scheme, one row per level.
 }
 \examples{
-\dontrun{
-lods(map_server(world_imagery_url()))
-}
+\dontshow{if (curl::has_internet()) withAutoprint(\{ # examplesIf}
+head(lods(map_server(world_imagery_url())), 4)
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 Other tiling scheme:

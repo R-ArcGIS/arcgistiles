@@ -50,7 +50,7 @@ mentioned in error messages as the source of the error. See the
 \code{call} argument of \code{\link[rlang:abort]{abort()}} for more information.}
 }
 \value{
-A \link{TileExportJob}.
+An \code{arcgisutils::arc_gp_job}.
 }
 \description{
 Asks a service to package its cache tiles for offline use. The service must
@@ -59,18 +59,15 @@ report \code{export_tiles_allowed}.
 \examples{
 \dontrun{
 vts <- vector_tile_server(open_street_map_url())
-job <- export_tiles_job(vts, service_bbox(vts), levels = 0:3)
+
+job <- export_tiles_job(vts, vts@full_extent, levels = 0:3)
+job$await()
 }
 }
 \seealso{
 Other tile export:
-\code{\link[=TileExportJob]{TileExportJob()}},
 \code{\link[=estimate_export_tiles_size]{estimate_export_tiles_size()}},
 \code{\link[=export_tiles]{export_tiles()}},
-\code{\link[=job_await]{job_await()}},
-\code{\link[=job_messages]{job_messages()}},
-\code{\link[=job_result]{job_result()}},
-\code{\link[=job_status]{job_status()}},
 \code{\link[=write_tile_package]{write_tile_package()}}
 }
 \concept{tile export}

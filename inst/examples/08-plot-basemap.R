@@ -13,7 +13,7 @@ tiles
 basemap <- as_rast(tiles)
 basemap
 
-out <- "nc-basemap.png"
+out <- file.path(tempdir(), "nc-basemap.png")
 
 png(out, width = 1600, height = 800)
 plotRGB(basemap)

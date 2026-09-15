@@ -31,6 +31,15 @@ An image written by \code{\link[=export_map]{export_map()}}. \code{bbox} is the 
 rendered, which is expanded from the requested extent to match the aspect
 ratio of \code{size}.
 }
+\examples{
+\dontshow{if (curl::has_internet()) withAutoprint(\{ # examplesIf}
+img <- export_map(map_server(census_url()), c(-104, 35.6, -94.32, 41))
+
+# wider than requested, to match the aspect ratio of `size`
+img@bbox
+img@scale
+\dontshow{\}) # examplesIf}
+}
 \seealso{
 Other map images:
 \code{\link[=export_map]{export_map()}}

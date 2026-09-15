@@ -22,7 +22,7 @@ roads
 ms <- map_server(world_imagery_url())
 imagery <- as_rast(get_tiles(ms, bbox, level = 14L, progress = FALSE))
 
-out <- "boston-vector-tiles.png"
+out <- file.path(tempdir(), "boston-vector-tiles.png")
 
 png(out, width = 1200, height = 900)
 plotRGB(imagery)

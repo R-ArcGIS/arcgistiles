@@ -21,9 +21,12 @@ A character vector of layer names.
 Layers present in vector tiles
 }
 \examples{
-\dontrun{
-vector_tile_layers(get_vector_tiles(vts, bbox, level = 14L))
-}
+\dontshow{if (curl::has_internet() && rlang::is_installed("protolite")) withAutoprint(\{ # examplesIf}
+vts <- vector_tile_server(open_street_map_url())
+boston <- wk::rct(-71.07, 42.35, -71.05, 42.36, crs = 4326)
+
+vector_tile_layers(get_vector_tiles(vts, boston, level = 14L, progress = FALSE))
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 Other vector tiles:

@@ -15,6 +15,12 @@ NULL
 #' @returns A `MapImage` object.
 #' @family map images
 #' @export
+#' @examplesIf curl::has_internet()
+#' img <- export_map(map_server(census_url()), c(-104, 35.6, -94.32, 41))
+#'
+#' # wider than requested, to match the aspect ratio of `size`
+#' img@bbox
+#' img@scale
 MapImage <- S7::new_class(
   "MapImage",
   package = "arcgistiles",
@@ -54,7 +60,8 @@ S7::method(as_rast, MapImage) <- function(x, ...) {
 #' @param x A [MapServer].
 #' @inheritParams tile_grid
 #' @param size Integer. Length two `c(width, height)` in pixels.
-#' @param format String or [image_format()]. Output image format.
+#' @param format String or [image_format()]. Output image format. `"png"` is
+#'   a single paletted band, so use `"png32"` for RGBA bands.
 #' @param file String. Where to write the image. Defaults to a temporary file.
 #' @param crs Coordinate reference system of the output image. Defaults to the
 #'   service's own.
@@ -69,11 +76,17 @@ S7::method(as_rast, MapImage) <- function(x, ...) {
 #' @returns A [MapImage].
 #' @family map images
 #' @export
-#' @examples
-#' \dontrun{
+#' @examplesIf curl::has_internet()
 #' ms <- map_server(census_url())
-#' export_map(ms, c(-104, 35.6, -94.32, 41), size = c(600, 400))
-#' }
+#'
+#' # counties layer only, filtered to the large ones
+#' export_map(
+#'   ms,
+#'   c(-104, 35.6, -94.32, 41),
+#'   size = c(600, 400),
+#'   layers = 3,
+#'   layer_defs = list(`3` = "POP2000 > 1000000")
+#' )
 export_map <- function(
   x,
   bbox,

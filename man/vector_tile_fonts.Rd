@@ -21,9 +21,9 @@ A character vector of font stack names.
 The font stacks a vector tile service publishes glyphs for.
 }
 \examples{
-\dontrun{
-vector_tile_fonts(vector_tile_server(open_street_map_url()))
-}
+\dontshow{if (curl::has_internet()) withAutoprint(\{ # examplesIf}
+head(vector_tile_fonts(vector_tile_server(open_street_map_url())))
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 Other vector tiles:

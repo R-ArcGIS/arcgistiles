@@ -13,12 +13,12 @@ write_tile_package(
 )
 }
 \arguments{
-\item{job}{A \link{TileExportJob}.}
+\item{job}{An \code{arc_gp_job} from \code{\link[=export_tiles_job]{export_tiles_job()}}.}
 
 \item{file}{String. Where to write the package. Defaults to a temporary
 file named after the job.}
 
-\item{interval}{Double. Seconds between polls.}
+\item{interval}{Double. Seconds between status polls.}
 
 \item{timeout}{Double. Seconds to wait before giving up.}
 
@@ -36,18 +36,16 @@ disk.
 }
 \examples{
 \dontrun{
-write_tile_package(job, "world.tpkx")
+vts <- vector_tile_server(open_street_map_url())
+job <- export_tiles_job(vts, vts@full_extent, levels = 0:3)
+
+write_tile_package(job, "world.vtpk")
 }
 }
 \seealso{
 Other tile export:
-\code{\link[=TileExportJob]{TileExportJob()}},
 \code{\link[=estimate_export_tiles_size]{estimate_export_tiles_size()}},
 \code{\link[=export_tiles]{export_tiles()}},
-\code{\link[=export_tiles_job]{export_tiles_job()}},
-\code{\link[=job_await]{job_await()}},
-\code{\link[=job_messages]{job_messages()}},
-\code{\link[=job_result]{job_result()}},
-\code{\link[=job_status]{job_status()}}
+\code{\link[=export_tiles_job]{export_tiles_job()}}
 }
 \concept{tile export}

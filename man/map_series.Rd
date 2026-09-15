@@ -32,7 +32,8 @@ map_series(
 
 \item{size}{Integer. Length two \code{c(width, height)} in pixels.}
 
-\item{format}{String or \code{\link[=image_format]{image_format()}}. Output image format.}
+\item{format}{String or \code{\link[=image_format]{image_format()}}. Output image format. \code{"png"} is
+a single paletted band, so use \code{"png32"} for RGBA bands.}
 
 \item{dir}{String. Directory to write images into. Created if needed.}
 
@@ -73,11 +74,13 @@ Exports one image per page extent, the equivalent of a map series or
 data driven pages. Requests run in parallel.
 }
 \examples{
-\dontrun{
+\dontshow{if (curl::has_internet()) withAutoprint(\{ # examplesIf}
 ms <- map_server(census_url())
-pages <- map_grid(c(-104, 35.6, -94.32, 41), nrow = 2, ncol = 2)
-map_series(ms, pages, size = c(800, 600))
-}
+pages <- map_grid(c(-104, 35.6, -94.32, 41), nrow = 1, ncol = 2)
+
+# every page comes back at the same scale, which is the point of a series
+map_series(ms, pages, size = c(400, 300), progress = FALSE)
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 Other map series:

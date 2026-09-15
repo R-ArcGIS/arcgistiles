@@ -31,6 +31,14 @@ A \code{TileSet} object.
 A set of tiles on disk. Use \code{\link[=get_tiles]{get_tiles()}} or \code{\link[=get_vector_tiles]{get_vector_tiles()}} to create
 one.
 }
+\examples{
+\dontshow{if (curl::has_internet()) withAutoprint(\{ # examplesIf}
+ms <- map_server(world_imagery_url())
+tiles <- get_tiles(ms, ms@full_extent, level = 1L, progress = FALSE)
+
+tiles@tiles
+\dontshow{\}) # examplesIf}
+}
 \seealso{
 Other tiles:
 \code{\link[=as_rast]{as_rast()}},

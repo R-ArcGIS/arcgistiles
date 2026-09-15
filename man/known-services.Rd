@@ -8,7 +8,7 @@
 \alias{world_hillshade_url}
 \alias{open_street_map_url}
 \alias{census_url}
-\title{Public Esri service URLs}
+\title{Public ArcGIS service URLs}
 \usage{
 world_imagery_url()
 
@@ -26,8 +26,8 @@ census_url()
 A service URL.
 }
 \description{
-URLs for a few well known public services, so examples and tests do not have
-to spell them out. None require a token to read.
+URLs for a handful of well known public services, to use in examples and
+when trying the package out. None of them require a token.
 }
 \examples{
 world_imagery_url()

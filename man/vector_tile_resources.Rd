@@ -21,9 +21,9 @@ A character vector of resource paths relative to the service.
 Lists the font and sprite resource files the service publishes.
 }
 \examples{
-\dontrun{
-vector_tile_resources(vector_tile_server(open_street_map_url()))
-}
+\dontshow{if (curl::has_internet()) withAutoprint(\{ # examplesIf}
+head(vector_tile_resources(vector_tile_server(open_street_map_url())))
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 Other vector tiles:

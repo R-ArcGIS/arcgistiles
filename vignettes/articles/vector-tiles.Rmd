@@ -1,0 +1,95 @@
+---
+title: "Vector tiles as sf"
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 8,
+  fig.height = 6,
+  dpi = 150
+)
+```
+
+Vector tiles carry geometry, not pixels. That means you can pull roads, water,
+and building footprints out of a basemap and treat them as `sf` data frames.
+
+Tiles are drawn the same way everywhere in the world, so this is a fast route
+to reference geometry for anywhere you have no local data for.
+
+```{r setup}
+library(arcgistiles)
+library(sf)
+```
+
+## Downloading tiles
+
+`vector_tile_server()` opens the service and `get_vector_tiles()` downloads
+`.pbf` tiles for an extent.
+
+```{r}
+vts <- vector_tile_server(open_street_map_url())
+vts
+```
+
+Vector tile levels are the familiar web map zoom levels. Level 14 is roughly
+neighbourhood scale.
+
+```{r}
+boston <- wk::rct(-71.12, 42.34, -71.04, 42.38, crs = 4326)
+
+tiles <- get_vector_tiles(vts, boston, level = 14L, progress = FALSE)
+tiles
+```
+
+## Finding the layers
+
+Layer names come from the service, not from a standard. Ask the tiles what
+they hold before naming anything.
+
+```{r}
+vector_tile_layers(tiles)
+```
+
+## Decoding
+
+`read_vector_tiles()` returns one `sf` data frame per layer, bound across
+tiles. Requires the [protolite](https://cran.r-project.org/package=protolite)
+package.
+
+```{r}
+parts <- read_vector_tiles(tiles, layers = c("road", "water area"), crs = 3857)
+
+parts$road
+```
+
+Features arrive clipped to their tile, so a road crossing four tiles arrives as
+four features. Dissolve on an attribute if you need whole geometries.
+
+```{r boston-vector-tiles}
+plot(st_geometry(parts$`water area`), col = "#a8c4d8", border = NA)
+plot(st_geometry(parts$road), col = "grey30", lwd = 0.4, add = TRUE)
+```
+
+## Style resources
+
+The service also publishes everything a renderer needs. `vector_tile_style()`
+returns a [Mapbox GL style](https://maplibre.org/maplibre-style-spec/)
+document with the relative `sprite` and `glyphs` paths resolved to absolute
+URLs.
+
+```{r}
+style <- vector_tile_style(vts)
+
+names(style)
+style$glyphs
+```
+
+Fonts and sprites download to disk for use in a renderer outside R.
+
+```{r}
+head(vector_tile_fonts(vts))
+
+vector_tile_sprite(vts)
+```

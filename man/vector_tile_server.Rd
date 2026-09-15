@@ -26,9 +26,9 @@ A \link{VectorTileServer} object.
 Open a vector tile service
 }
 \examples{
-\dontrun{
+\dontshow{if (curl::has_internet()) withAutoprint(\{ # examplesIf}
 vector_tile_server(open_street_map_url())
-}
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 Other services:

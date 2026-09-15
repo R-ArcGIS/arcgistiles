@@ -19,10 +19,13 @@ Reads downloaded imagery into a \code{SpatRaster} with the extent and CRS of the
 service it came from. Requires the terra package.
 }
 \examples{
-\dontrun{
-ms <- map_server(world_imagery_url())
-as_rast(get_tiles(ms, service_bbox(ms), level = 3L))
-}
+\dontshow{if (curl::has_internet() && rlang::is_installed("terra")) withAutoprint(\{ # examplesIf}
+ms <- map_server(world_topo_map_url())
+boston <- wk::rct(-71.2, 42.3, -71.0, 42.4, crs = 4326)
+
+basemap <- as_rast(get_tiles(ms, boston, level = 10L, progress = FALSE))
+terra::plotRGB(basemap)
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 Other tiles:

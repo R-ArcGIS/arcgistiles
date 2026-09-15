@@ -58,6 +58,11 @@ S7::method(tile_info, Service) <- function(x) {
 #' @returns A `MapServer` object.
 #' @family services
 #' @export
+#' @examplesIf curl::has_internet()
+#' ms <- map_server(world_imagery_url())
+#'
+#' ms@full_extent
+#' ms@cached
 MapServer <- S7::new_class(
   "MapServer",
   parent = Service,
@@ -80,6 +85,11 @@ MapServer <- S7::new_class(
 #' @returns A `VectorTileServer` object.
 #' @family services
 #' @export
+#' @examplesIf curl::has_internet()
+#' vts <- vector_tile_server(open_street_map_url())
+#'
+#' vts@full_extent
+#' vts@tiles
 VectorTileServer <- S7::new_class(
   "VectorTileServer",
   parent = Service,
@@ -100,11 +110,8 @@ VectorTileServer <- S7::new_class(
 #' @returns A [MapServer] object.
 #' @family services
 #' @export
-#' @examples
-#' \dontrun{
+#' @examplesIf curl::has_internet()
 #' map_server(world_imagery_url())
-#' map_server(arcgislayers::arc_open(world_imagery_url()))
-#' }
 map_server <- function(
   x,
   token = arcgisutils::arc_token(),
@@ -135,10 +142,8 @@ map_server <- function(
 #' @returns A [VectorTileServer] object.
 #' @family services
 #' @export
-#' @examples
-#' \dontrun{
+#' @examplesIf curl::has_internet()
 #' vector_tile_server(open_street_map_url())
-#' }
 vector_tile_server <- function(
   x,
   token = arcgisutils::arc_token(),

@@ -1,34 +1,6 @@
 #' @include services.R
 NULL
 
-#' Tile export job
-#'
-#' An asynchronous tile export submitted by [export_tiles_job()].
-#'
-#' @param url String. Service the job was submitted to.
-#' @param job_id String. Identifier the service assigned the job.
-#' @param token An `httr2_token`, or `NULL`.
-#' @returns A `TileExportJob` object.
-#' @family tile export
-#' @export
-TileExportJob <- S7::new_class(
-  "TileExportJob",
-  package = "arcgistiles",
-  properties = list(
-    url = s7x::class_string,
-    job_id = s7x::class_string,
-    token = class_token
-  )
-)
-
-S7::method(print, TileExportJob) <- function(x, ...) {
-  cli::cli_text("{.cls TileExportJob} {.val {x@job_id}}")
-  cli::cli_text("{.url {x@url}}")
-  cli::cli_text("{.strong Status:} {job_status(x)}")
-
-  invisible(x)
-}
-
 #' Submit a tile export job
 #'
 #' Asks a service to package its cache tiles for offline use. The service must
@@ -48,13 +20,15 @@ S7::method(print, TileExportJob) <- function(x, ...) {
 #'   used when `optimize` is `TRUE`.
 #' @param area_of_interest An `sf` or `sfc` polygon. Supersedes `bbox`.
 #' @param ... Additional query parameters passed to the service.
-#' @returns A [TileExportJob].
+#' @returns An `arcgisutils::arc_gp_job`.
 #' @family tile export
 #' @export
 #' @examples
 #' \dontrun{
 #' vts <- vector_tile_server(open_street_map_url())
-#' job <- export_tiles_job(vts, service_bbox(vts), levels = 0:3)
+#'
+#' job <- export_tiles_job(vts, vts@full_extent, levels = 0:3)
+#' job$await()
 #' }
 export_tiles_job <- function(
   x,
@@ -116,13 +90,15 @@ export_tiles_job <- function(
 #' download size instead of tiles. Map services only.
 #'
 #' @inheritParams export_tiles_job
-#' @inheritParams job_await
+#' @inheritParams write_tile_package
 #' @returns A list with the estimated `size` in bytes and `tile_count`.
 #' @family tile export
 #' @export
 #' @examples
 #' \dontrun{
-#' estimate_export_tiles_size(ms, service_bbox(ms), levels = 0:5)
+#' ms <- map_server(world_imagery_url())
+#'
+#' estimate_export_tiles_size(ms, ms@full_extent, levels = 0:5)
 #' }
 estimate_export_tiles_size <- function(
   x,
@@ -144,10 +120,17 @@ estimate_export_tiles_size <- function(
     f = "json"
   ))
 
-  job <- submit_tile_job(x, "estimateExportTilesSize", query, error_call)
-  job_await(job, interval = interval, timeout = timeout, error_call = error_call)
+  job <- arcgisutils::new_gp_job(
+    x@url,
+    params = arcgisutils::as_form_params(query),
+    result_fn = estimate_result,
+    submit_path = "estimateExportTilesSize",
+    results_path = function(id) c("jobs", id),
+    token = x@token
+  )
 
-  info <- job_info(job, error_call)
+  job$start()
+  info <- job$await(interval = interval, timeout = timeout)
 
   if (!is.null(info[["estimatedTilesSize"]])) {
     return(list(
@@ -156,7 +139,18 @@ estimate_export_tiles_size <- function(
     ))
   }
 
-  result <- job_result(job, "out_service_url", error_call = error_call)
+  result <- arcgisutils::fetch_layer_metadata(
+    x@url,
+    x@token,
+    path = c(
+      "estimateExportTilesSize",
+      "jobs",
+      job$id,
+      "results",
+      "out_service_url"
+    ),
+    call = error_call
+  )[["value"]]
 
   list(
     size = as.double(result[["totalSize"]] %||% NA_real_),
@@ -165,155 +159,48 @@ estimate_export_tiles_size <- function(
 }
 
 submit_tile_job <- function(x, operation, query, call = rlang::caller_env()) {
-  res <- arcgisutils::fetch_layer_metadata(x@url, x@token, path = operation, query = query, call = call)
+  vector <- S7::S7_inherits(x, VectorTileServer)
 
-  job_id <- res[["jobId"]]
-
-  if (is.null(job_id)) {
-    cli::cli_abort(
-      "The service did not return a job id.",
-      call = call
-    )
-  }
-
-  TileExportJob(url = x@url, job_id = job_id, token = x@token)
-}
-
-#' Tile export job status
-#'
-#' @param job A [TileExportJob].
-#' @inheritParams tile_grid
-#' @returns The job's status string, such as `"esriJobSucceeded"`.
-#' @family tile export
-#' @export
-#' @examples
-#' \dontrun{
-#' job_status(job)
-#' }
-job_status <- function(job, error_call = rlang::caller_env()) {
-  job_info(job, error_call)[["jobStatus"]] %||% NA_character_
-}
-
-#' Messages from a tile export job
-#'
-#' @inheritParams job_await
-#' @returns A data frame of job messages, or an empty data frame.
-#' @family tile export
-#' @export
-#' @examples
-#' \dontrun{
-#' job_messages(job)
-#' }
-job_messages <- function(job, error_call = rlang::caller_env()) {
-  messages <- job_info(job, error_call)[["messages"]]
-
-  if (is.null(messages) || length(messages) == 0L) {
-    return(data_frame(data.frame(
-      type = character(),
-      description = character()
-    )))
-  }
-
-  if (!is.data.frame(messages)) {
-    messages <- rbind_results(messages, call = error_call)
-  }
-
-  data_frame(messages, call = error_call)
-}
-
-job_info <- function(job, call = rlang::caller_env()) {
-  arcgisutils::fetch_layer_metadata(job@url, job@token, path = c("jobs", job@job_id), call = call)
-}
-
-#' Wait for a tile export job
-#'
-#' Polls until the job succeeds, fails, or `timeout` elapses.
-#'
-#' @inheritParams job_status
-#' @param interval Double. Seconds between polls.
-#' @param timeout Double. Seconds to wait before giving up.
-#' @returns The job, invisibly.
-#' @family tile export
-#' @export
-#' @examples
-#' \dontrun{
-#' job_await(job)
-#' }
-job_await <- function(
-  job,
-  interval = 2,
-  timeout = 3600,
-  error_call = rlang::caller_env()
-) {
-  check_number_decimal(interval, min = 0, call = error_call)
-  check_number_decimal(timeout, min = 0, call = error_call)
-
-  deadline <- Sys.time() + timeout
-
-  repeat {
-    status <- job_status(job, error_call)
-
-    if (identical(status, "esriJobSucceeded")) {
-      return(invisible(job))
-    }
-
-    if (status %in% c("esriJobFailed", "esriJobTimedOut", "esriJobCancelled")) {
-      cli::cli_abort(
-        c(
-          "Tile export job {.val {job@job_id}} did not succeed.",
-          "x" = "Status is {.val {status}}."
-        ),
-        call = error_call
-      )
-    }
-
-    if (Sys.time() > deadline) {
-      cli::cli_abort(
-        "Tile export job {.val {job@job_id}} did not finish within {timeout} seconds.",
-        call = error_call
-      )
-    }
-
-    Sys.sleep(interval)
-  }
-}
-
-#' Result of a tile export job
-#'
-#' Reads the download URL from the finished job. Vector tile services put it on
-#' the job resource, map services expose it as a named result parameter.
-#'
-#' @inheritParams job_await
-#' @param param String. Name of the result parameter to read when the job
-#'   resource carries no output URL.
-#' @returns The result value, usually a URL string.
-#' @family tile export
-#' @export
-#' @examples
-#' \dontrun{
-#' job_result(job)
-#' }
-job_result <- function(
-  job,
-  param = "out_service_url",
-  error_call = rlang::caller_env()
-) {
-  check_string(param, allow_empty = FALSE, call = error_call)
-
-  output <- job_info(job, error_call)[["output"]][["outputUrl"]]
-
-  if (!is.null(output)) {
-    return(output)
-  }
-
-  res <- arcgisutils::fetch_layer_metadata(
-    job@url,
-    job@token,
-    path = c("exportTiles", "jobs", job@job_id, "results", param),
-    call = error_call
+  job <- arcgisutils::new_gp_job(
+    x@url,
+    params = arcgisutils::as_form_params(query),
+    result_fn = if (vector) vector_tile_result else map_tile_result,
+    submit_path = operation,
+    results_path = if (vector) {
+      function(id) c("jobs", id)
+    } else {
+      function(id) c(operation, "jobs", id, "results", "out_service_url")
+    },
+    token = x@token
   )
 
+  job$start()
+
+  if (is.null(job$id)) {
+    cli::cli_abort("The service did not return a job id.", call = call)
+  }
+
+  job
+}
+
+# vector tile services put the download URL on the job resource, map services
+# expose it as a named result parameter
+vector_tile_result <- function(resp) {
+  res <- RcppSimdJson::fparse(resp)
+  arcgisutils::detect_errors(res)
+  res[["output"]][["outputUrl"]]
+}
+
+map_tile_result <- function(resp) {
+  res <- RcppSimdJson::fparse(resp)
+  arcgisutils::detect_errors(res)
   res[["value"]]
+}
+
+estimate_result <- function(resp) {
+  res <- RcppSimdJson::fparse(resp)
+  arcgisutils::detect_errors(res)
+  res
 }
 
 #' Download an exported tile package
@@ -321,15 +208,21 @@ job_result <- function(
 #' Waits for the job if it has not finished, then writes the tile package to
 #' disk.
 #'
-#' @inheritParams job_await
+#' @param job An `arc_gp_job` from [export_tiles_job()].
 #' @param file String. Where to write the package. Defaults to a temporary
 #'   file named after the job.
+#' @param interval Double. Seconds between status polls.
+#' @param timeout Double. Seconds to wait before giving up.
+#' @inheritParams tile_grid
 #' @returns The path to the downloaded file.
 #' @family tile export
 #' @export
 #' @examples
 #' \dontrun{
-#' write_tile_package(job, "world.tpkx")
+#' vts <- vector_tile_server(open_street_map_url())
+#' job <- export_tiles_job(vts, vts@full_extent, levels = 0:3)
+#'
+#' write_tile_package(job, "world.vtpk")
 #' }
 write_tile_package <- function(
   job,
@@ -340,8 +233,18 @@ write_tile_package <- function(
 ) {
   check_string(file, allow_null = TRUE, allow_empty = FALSE, call = error_call)
 
-  job_await(job, interval = interval, timeout = timeout, error_call = error_call)
-  url <- job_result(job, error_call = error_call)
+  url <- job$await(interval = interval, timeout = timeout)
+  status <- job$status@status
+
+  if (!identical(status, "esriJobSucceeded")) {
+    cli::cli_abort(
+      c(
+        "Tile export job {.val {job$id}} did not succeed.",
+        "x" = "Status is {.val {status}}."
+      ),
+      call = error_call
+    )
+  }
 
   if (!is.character(url) || length(url) != 1L) {
     cli::cli_abort(
@@ -355,7 +258,7 @@ write_tile_package <- function(
   ext <- tools::file_ext(httr2::url_parse(url)[["path"]] %||% "")
   file <- file %||% tempfile(fileext = if (nzchar(ext)) paste0(".", ext) else ".tpkx")
 
-  arcgisutils::arc_base_req(url, job@token, error_call = error_call) |>
+  arcgisutils::arc_base_req(url, job$token, error_call = error_call) |>
     httr2::req_perform(path = file, error_call = error_call)
 
   file
@@ -372,7 +275,9 @@ write_tile_package <- function(
 #' @export
 #' @examples
 #' \dontrun{
-#' export_tiles(vts, service_bbox(vts), levels = 0:3, file = "world.vtpk")
+#' vts <- vector_tile_server(open_street_map_url())
+#'
+#' export_tiles(vts, vts@full_extent, levels = 0:3, file = "world.vtpk")
 #' }
 export_tiles <- function(
   x,

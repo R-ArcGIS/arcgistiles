@@ -23,9 +23,11 @@ document. The relative \code{sprite} and \code{glyphs} paths are resolved to abs
 URLs so they can be fetched directly.
 }
 \examples{
-\dontrun{
-vector_tile_style(vector_tile_server(open_street_map_url()))
-}
+\dontshow{if (curl::has_internet()) withAutoprint(\{ # examplesIf}
+style <- vector_tile_style(vector_tile_server(open_street_map_url()))
+
+style$glyphs
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 Other vector tiles:

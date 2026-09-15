@@ -27,7 +27,7 @@ ids or a range such as \code{"1-4,7-9"}.}
 \item{file}{String. Where to write the package. Defaults to a temporary
 file named after the job.}
 
-\item{interval}{Double. Seconds between polls.}
+\item{interval}{Double. Seconds between status polls.}
 
 \item{timeout}{Double. Seconds to wait before giving up.}
 
@@ -46,18 +46,15 @@ Submits a tile export, waits for it, and downloads the result.
 }
 \examples{
 \dontrun{
-export_tiles(vts, service_bbox(vts), levels = 0:3, file = "world.vtpk")
+vts <- vector_tile_server(open_street_map_url())
+
+export_tiles(vts, vts@full_extent, levels = 0:3, file = "world.vtpk")
 }
 }
 \seealso{
 Other tile export:
-\code{\link[=TileExportJob]{TileExportJob()}},
 \code{\link[=estimate_export_tiles_size]{estimate_export_tiles_size()}},
 \code{\link[=export_tiles_job]{export_tiles_job()}},
-\code{\link[=job_await]{job_await()}},
-\code{\link[=job_messages]{job_messages()}},
-\code{\link[=job_result]{job_result()}},
-\code{\link[=job_status]{job_status()}},
 \code{\link[=write_tile_package]{write_tile_package()}}
 }
 \concept{tile export}

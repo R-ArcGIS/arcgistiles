@@ -41,10 +41,12 @@ A \link{TileSet} whose \code{path} column points at \code{.pbf} files.
 Downloads the \code{.pbf} tiles covering \code{bbox} at \code{level}.
 }
 \examples{
-\dontrun{
+\dontshow{if (curl::has_internet()) withAutoprint(\{ # examplesIf}
 vts <- vector_tile_server(open_street_map_url())
-get_vector_tiles(vts, service_bbox(vts), level = 3L)
-}
+boston <- wk::rct(-71.07, 42.35, -71.05, 42.36, crs = 4326)
+
+get_vector_tiles(vts, boston, level = 14L, progress = FALSE)
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 Other vector tiles:

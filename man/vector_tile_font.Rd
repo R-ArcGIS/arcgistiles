@@ -33,10 +33,11 @@ The path to the downloaded \code{.pbf} file.
 Downloads a range of glyphs for one font stack.
 }
 \examples{
-\dontrun{
+\dontshow{if (curl::has_internet()) withAutoprint(\{ # examplesIf}
 vts <- vector_tile_server(open_street_map_url())
+
 vector_tile_font(vts, vector_tile_fonts(vts)[1], "0-255")
-}
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 Other vector tiles:

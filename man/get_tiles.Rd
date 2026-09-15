@@ -42,10 +42,13 @@ Downloads every cached tile covering \code{bbox} at \code{level}. Tiles that are
 missing from the cache are reported in the \code{ok} column rather than erroring.
 }
 \examples{
-\dontrun{
+\dontshow{if (curl::has_internet()) withAutoprint(\{ # examplesIf}
 ms <- map_server(world_imagery_url())
-get_tiles(ms, service_bbox(ms), level = 3L)
-}
+boston <- wk::rct(-71.2, 42.3, -71.0, 42.4, crs = 4326)
+
+tiles <- get_tiles(ms, boston, size = c(1024, 1024), progress = FALSE)
+tiles
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 Other tiles:

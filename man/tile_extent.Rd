@@ -24,9 +24,9 @@ A data frame with columns \code{level}, \code{row}, \code{col}, \code{xmin}, \co
 Extent of a tile
 }
 \examples{
-\dontrun{
+\dontshow{if (curl::has_internet()) withAutoprint(\{ # examplesIf}
 tile_extent(map_server(world_imagery_url()), 6L, 24L, 18L)
-}
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 Other tiling scheme:

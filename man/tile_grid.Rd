@@ -27,9 +27,12 @@ A data frame with columns \code{level}, \code{row}, \code{col}, \code{xmin}, \co
 Computes the tile coordinates covering \code{bbox} at \code{level}.
 }
 \examples{
-\dontrun{
-tile_grid(map_server(world_imagery_url()), bbox, 6L)
-}
+\dontshow{if (curl::has_internet()) withAutoprint(\{ # examplesIf}
+boston <- wk::rct(-71.2, 42.3, -71.0, 42.4, crs = 4326)
+
+# arithmetic only, so a grid can be inspected before anything downloads
+tile_grid(map_server(world_imagery_url()), boston, 12L)
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 Other tiling scheme:

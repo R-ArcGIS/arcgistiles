@@ -15,6 +15,11 @@ NULL
 #' @returns A `TileSet` object.
 #' @family tiles
 #' @export
+#' @examplesIf curl::has_internet()
+#' ms <- map_server(world_imagery_url())
+#' tiles <- get_tiles(ms, ms@full_extent, level = 1L, progress = FALSE)
+#'
+#' tiles@tiles
 TileSet <- S7::new_class(
   "TileSet",
   package = "arcgistiles",
@@ -43,10 +48,12 @@ S7::method(print, TileSet) <- function(x, ...) {
 #' @returns A `bbox` covering every tile that downloaded successfully.
 #' @family tiles
 #' @export
-#' @examples
-#' \dontrun{
-#' tileset_bbox(get_tiles(map_server(world_imagery_url()), bbox, 6L))
-#' }
+#' @examplesIf curl::has_internet()
+#' ms <- map_server(world_imagery_url())
+#' boston <- wk::rct(-71.2, 42.3, -71.0, 42.4, crs = 4326)
+#'
+#' # wider than the requested box, because whole tiles are downloaded
+#' tileset_bbox(get_tiles(ms, boston, level = 10L, progress = FALSE))
 tileset_bbox <- function(x) {
   tiles <- x@tiles[x@tiles[["ok"]], , drop = FALSE]
 
@@ -78,11 +85,12 @@ tileset_bbox <- function(x) {
 #' @returns A [TileSet].
 #' @family tiles
 #' @export
-#' @examples
-#' \dontrun{
+#' @examplesIf curl::has_internet()
 #' ms <- map_server(world_imagery_url())
-#' get_tiles(ms, service_bbox(ms), level = 3L)
-#' }
+#' boston <- wk::rct(-71.2, 42.3, -71.0, 42.4, crs = 4326)
+#'
+#' tiles <- get_tiles(ms, boston, size = c(1024, 1024), progress = FALSE)
+#' tiles
 get_tiles <- function(
   x,
   bbox,
@@ -170,11 +178,11 @@ get_tiles <- function(
 #' @returns A [TileSet] whose `path` column points at `.pbf` files.
 #' @family vector tiles
 #' @export
-#' @examples
-#' \dontrun{
+#' @examplesIf curl::has_internet()
 #' vts <- vector_tile_server(open_street_map_url())
-#' get_vector_tiles(vts, service_bbox(vts), level = 3L)
-#' }
+#' boston <- wk::rct(-71.07, 42.35, -71.05, 42.36, crs = 4326)
+#'
+#' get_vector_tiles(vts, boston, level = 14L, progress = FALSE)
 get_vector_tiles <- function(
   x,
   bbox,

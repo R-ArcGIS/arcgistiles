@@ -1,0 +1,96 @@
+---
+title: "Exporting a map series"
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 8,
+  fig.height = 5,
+  dpi = 150
+)
+```
+
+A map series is one map drawn many times, once per page, at a single scale.
+ArcGIS Pro calls it a map series or data driven pages.
+
+`map_series()` is the equivalent for a dynamic map service. Give it a set of
+extents and it exports one image per extent in parallel.
+
+```{r setup}
+library(arcgistiles)
+library(sf)
+
+census <- map_server(census_url())
+```
+
+## Pages from a grid
+
+`map_grid()` splits one extent into a regular grid. `overlap` adds a shared
+margin so adjacent pages can be trimmed and butted together.
+
+```{r}
+pages <- map_grid(c(-104, 35.6, -94.32, 41), nrow = 2, ncol = 3, overlap = 0.05)
+
+pages
+```
+
+`map_series()` exports them. Every row reports the extent the server actually
+drew and the scale it drew it at.
+
+```{r}
+series <- map_series(
+  census,
+  pages,
+  size = c(800, 600),
+  format = "png32",
+  progress = FALSE
+)
+
+series
+```
+
+All six pages share one scale, which is the whole point. A per page `export_map()`
+loop would give you six different scales and an atlas nobody can compare
+across.
+
+```{r}
+unique(series$scale)
+```
+
+## Pages from features
+
+Pages do not have to be a grid. Pass any `sf` object and you get one image per
+feature, framed on that feature's bounding box.
+
+```{r}
+nc <- read_sf(system.file("shape/nc.shp", package = "sf"))
+big <- nc[order(-nc$AREA), ][1:4, ]
+
+county_pages <- map_series(
+  census,
+  big,
+  size = c(600, 400),
+  margin = 0.1,
+  page_names = big$NAME,
+  progress = FALSE
+)
+
+county_pages[c("name", "ok", "scale")]
+```
+
+Because each county has its own size, these pages do not share a scale. Pass
+the features through `map_grid()` on a common extent when scale has to be
+fixed.
+
+## Checking the output
+
+`ok` is `FALSE` for a page the service refused, and the rest of the series
+still stands. Nothing throws.
+
+```{r first-page}
+all(series$ok)
+
+terra::plotRGB(terra::rast(series$path[1]))
+```

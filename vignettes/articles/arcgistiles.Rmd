@@ -1,0 +1,136 @@
+---
+title: "Tiles, images, and basemaps"
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 8,
+  fig.height = 5,
+  dpi = 150
+)
+```
+
+There are two ways to get a picture of a map out of ArcGIS. A **cached**
+service hands you square tiles it drew in advance, and a **dynamic** service
+draws the exact extent you ask for.
+
+`arcgistiles` does both, and `as_rast()` turns either into a georeferenced
+`SpatRaster`. That is the point of the package: a basemap you can plot your own
+data on top of.
+
+```{r setup}
+library(arcgistiles)
+library(terra)
+library(sf)
+```
+
+## Opening a service
+
+`map_server()` reads a service and its tiling scheme.
+
+```{r}
+ms <- map_server(world_topo_map_url())
+ms
+```
+
+`Levels: 0-23` means the cache holds 24 zoom levels. `lods()` shows what each
+one is worth in map units.
+
+```{r}
+head(lods(ms), 5)
+```
+
+## Picking a level
+
+Level numbers are not a unit anyone thinks in. Give `get_tiles()` a `size` in
+pixels instead and it picks the level that renders your extent closest to it.
+
+```{r}
+nc <- read_sf(system.file("shape/nc.shp", package = "sf"))
+
+level_for_size(ms, st_bbox(nc), c(1600, 800))
+```
+
+## Tiles for an extent
+
+`tile_grid()` is arithmetic on the tiling scheme, so you can see the cost of a
+request before making it. Nine tiles here, one row per tile.
+
+```{r}
+tile_grid(ms, st_bbox(nc), level = 7L)
+```
+
+`get_tiles()` downloads them in parallel and `as_rast()` merges them into one
+raster in the service's CRS.
+
+```{r}
+tiles <- get_tiles(ms, st_bbox(nc), size = c(1600, 800), progress = FALSE)
+tiles
+
+basemap <- as_rast(tiles)
+```
+
+The counties land on the coastline, which is the only real test that the
+tiling scheme, the CRS, and the raster extent all agree.
+
+```{r nc-basemap, fig.height = 4}
+plotRGB(basemap)
+plot(st_transform(st_geometry(nc), st_crs(basemap)), add = TRUE, border = "red")
+```
+
+Whole tiles come down, so the raster is always a little wider than what you
+asked for. `tileset_bbox()` reports what you actually got.
+
+```{r}
+tileset_bbox(tiles)
+```
+
+## Dynamic services
+
+A dynamic service draws on request, so you can filter it. `export_map()` takes
+layer ids and SQL definition expressions.
+
+```{r}
+census <- map_server(census_url())
+
+img <- export_map(
+  census,
+  c(-104, 35.6, -94.32, 41),
+  size = c(600, 400),
+  format = "png32",
+  layers = 3,
+  layer_defs = list(`3` = "POP2000 > 1000000")
+)
+
+img
+```
+
+Note the extent that came back. The server widened the request to match the
+aspect ratio of `size`, which is why `MapImage` carries the extent it drew
+rather than the one you sent.
+
+`format = "png32"` above is deliberate. A plain `"png"` arrives as one paletted
+band, which `plot()` handles but `plotRGB()` does not.
+
+```{r counties}
+plotRGB(as_rast(img))
+```
+
+## Basemaps
+
+The basemap styles service catalogue is readable without a token.
+
+```{r}
+styles <- basemap_styles("arcgis")
+
+head(styles[c("path", "name", "group")])
+```
+
+Fetching a style document itself needs a token with the
+`premium:user:basemaps` privilege.
+
+```{r eval=FALSE}
+style <- basemap_style("arcgis/navigation", language = "es")
+```

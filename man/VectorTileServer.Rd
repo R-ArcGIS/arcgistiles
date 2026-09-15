@@ -47,6 +47,14 @@ A \code{VectorTileServer} object.
 \description{
 A \code{VectorTileServer} endpoint. Use \code{\link[=vector_tile_server]{vector_tile_server()}} to create one.
 }
+\examples{
+\dontshow{if (curl::has_internet()) withAutoprint(\{ # examplesIf}
+vts <- vector_tile_server(open_street_map_url())
+
+vts@full_extent
+vts@tiles
+\dontshow{\}) # examplesIf}
+}
 \seealso{
 Other services:
 \code{\link[=MapServer]{MapServer()}},

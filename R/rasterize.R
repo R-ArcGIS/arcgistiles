@@ -11,11 +11,12 @@ NULL
 #' @returns A `terra::SpatRaster`.
 #' @family tiles
 #' @export
-#' @examples
-#' \dontrun{
-#' ms <- map_server(world_imagery_url())
-#' as_rast(get_tiles(ms, service_bbox(ms), level = 3L))
-#' }
+#' @examplesIf curl::has_internet() && rlang::is_installed("terra")
+#' ms <- map_server(world_topo_map_url())
+#' boston <- wk::rct(-71.2, 42.3, -71.0, 42.4, crs = 4326)
+#'
+#' basemap <- as_rast(get_tiles(ms, boston, level = 10L, progress = FALSE))
+#' terra::plotRGB(basemap)
 as_rast <- S7::new_generic("as_rast", "x")
 
 S7::method(as_rast, TileSet) <- function(x, ...) {

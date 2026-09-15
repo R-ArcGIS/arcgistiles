@@ -63,11 +63,6 @@ reference:
   - export_tiles_job
   - estimate_export_tiles_size
   - write_tile_package
-  - job_status
-  - job_await
-  - job_result
-  - job_messages
-  - TileExportJob
 - title: Enumerations
   contents:
   - image_format
@@ -77,3 +72,11 @@ reference:
   - style_family
   - places
 
+
+articles:
+- title: Articles
+  navbar: ~
+  contents:
+  - articles/arcgistiles
+  - articles/vector-tiles
+  - articles/map-series

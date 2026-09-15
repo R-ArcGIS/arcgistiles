@@ -90,27 +90,31 @@ img <- export_map(
   census,
   c(-104, 35.6, -94.32, 41),
   size = c(600, 400),
+  format = "png32",
   layers = 3,
   layer_defs = list(`3` = "POP2000 > 1000000")
 )
 
 img
-#> <MapImage> 600x400 png
+#> <MapImage> 600x400 png32
 #> CRS: EPSG:4269
 #> Extent: -104, 35.0733333333333, -94.32, and 41.5266666666667
 ```
+
+Ask for `png32` when you mean to plot with `terra::plotRGB()`. A plain `png`
+arrives as one paletted band.
 
 ## Map series
 
 `map_grid()` splits an extent into pages and `map_series()` exports them in
 parallel, the equivalent of ArcGIS Pro's map series or data driven pages. Pages
-are a [wk::rct()] vector, and can equally come from an `sf` object, one image
+are a `wk::rct()` vector, and can equally come from an `sf` object, one image
 per feature.
 
 ``` r
 pages <- map_grid(c(-104, 35.6, -94.32, 41), nrow = 2, ncol = 3, overlap = 0.05)
 
-map_series(census, pages, size = c(800, 600), dir = "atlas")
+map_series(census, pages, size = c(800, 600))
 #>   page     name   ok                            extent   scale
 #> 1    1 page-001 TRUE [-104.18667 38.3 -100.58667 41.0] 1893304
 #> 2    2 page-002 TRUE [-100.96000 38.3  -97.36000 41.0] 1893304
@@ -149,7 +153,7 @@ parts$road
 Roads and water from OpenStreetMap vector tiles over World Imagery, from
 `09-vector-tile-sf.R`:
 
-![Boston streets and water decoded from vector tiles over imagery](inst/examples/output/boston-vector-tiles.png)
+![Boston streets and water decoded from vector tiles over imagery](man/figures/boston-vector-tiles.jpg)
 
 The basemap styles service is browsable without a token:
 
@@ -175,14 +179,20 @@ as an asynchronous job.
 
 ``` r
 job <- export_tiles_job(vts, vts@full_extent, levels = 0:3)
-job_await(job)
+job$await()
 write_tile_package(job, "world.vtpk")
 ```
 
 `export_tiles()` does all three in one call, and
 `estimate_export_tiles_size()` reports the download size first.
 
-## Examples
+## Learn more
+
+Three articles walk through the package end to end:
+
+- [Tiles, images, and basemaps](https://r.esri.com/arcgistiles/articles/arcgistiles.html)
+- [Vector tiles as sf](https://r.esri.com/arcgistiles/articles/vector-tiles.html)
+- [Exporting a map series](https://r.esri.com/arcgistiles/articles/map-series.html)
 
 `inst/examples/` holds a runnable script for each part of the package, with the
 console output of a real run captured alongside it. See
@@ -190,4 +200,4 @@ console output of a real run captured alongside it. See
 
 Plotting vector data over downloaded tiles, from `08-plot-basemap.R`:
 
-![North Carolina counties over an ArcGIS topographic basemap](inst/examples/output/nc-basemap.png)
+![North Carolina counties over an ArcGIS topographic basemap](man/figures/nc-basemap.jpg)

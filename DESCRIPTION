@@ -29,12 +29,14 @@ Imports:
     sf,
     yyjsonr
 Suggests:
+    curl,
     protolite,
     terra,
     testthat (>= 3.0.0),
     withr
 Config/testthat/edition: 3
 Encoding: UTF-8
+Language: en
 Roxygen: list(markdown = TRUE)
 Config/roxygen2/version: 8.1.0.9000
 Collate: 
@@ -55,3 +57,4 @@ Collate:
     'read-vector-tiles.R'
     'vector-tile-resources.R'
     'zzz.R'
+Config/Needs/website: rmarkdown

@@ -24,9 +24,10 @@ Finds the level of detail whose resolution is closest to \code{resolution} on a
 log scale.
 }
 \examples{
-\dontrun{
+\dontshow{if (curl::has_internet()) withAutoprint(\{ # examplesIf}
+# the level that renders roughly 100 metres per pixel
 level_for_resolution(map_server(world_imagery_url()), 100)
-}
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 Other tiling scheme:

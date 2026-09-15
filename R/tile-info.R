@@ -103,10 +103,8 @@ as_tile_info <- function(x, call = rlang::caller_env()) {
 #' @returns A [TileInfo] object.
 #' @family tiling scheme
 #' @export
-#' @examples
-#' \dontrun{
+#' @examplesIf curl::has_internet()
 #' tile_info(map_server(world_imagery_url()))
-#' }
 tile_info <- S7::new_generic("tile_info", "x")
 
 S7::method(tile_info, TileInfo) <- function(x) x
@@ -120,10 +118,8 @@ S7::method(tile_info, TileInfo) <- function(x) x
 #'   `tile_width`, and `tile_height`, the latter two in map units.
 #' @family tiling scheme
 #' @export
-#' @examples
-#' \dontrun{
-#' lods(map_server(world_imagery_url()))
-#' }
+#' @examplesIf curl::has_internet()
+#' head(lods(map_server(world_imagery_url())), 4)
 lods <- function(x) {
   info <- tile_info(x)
   res <- info@lods
@@ -144,10 +140,9 @@ lods <- function(x) {
 #' @returns An integer level.
 #' @family tiling scheme
 #' @export
-#' @examples
-#' \dontrun{
+#' @examplesIf curl::has_internet()
+#' # the level that renders roughly 100 metres per pixel
 #' level_for_resolution(map_server(world_imagery_url()), 100)
-#' }
 level_for_resolution <- function(
   x,
   resolution,
@@ -178,10 +173,10 @@ level_for_resolution <- function(
 #' @returns An integer level.
 #' @family tiling scheme
 #' @export
-#' @examples
-#' \dontrun{
-#' level_for_size(map_server(world_imagery_url()), bbox, c(1024, 1024))
-#' }
+#' @examplesIf curl::has_internet()
+#' boston <- wk::rct(-71.2, 42.3, -71.0, 42.4, crs = 4326)
+#'
+#' level_for_size(map_server(world_imagery_url()), boston, c(1024, 1024))
 level_for_size <- function(
   x,
   bbox,
@@ -227,10 +222,8 @@ lod_index <- function(info, level, call = rlang::caller_env()) {
 #'   `xmax`, and `ymax`.
 #' @family tiling scheme
 #' @export
-#' @examples
-#' \dontrun{
+#' @examplesIf curl::has_internet()
 #' tile_extent(map_server(world_imagery_url()), 6L, 24L, 18L)
-#' }
 tile_extent <- function(x, level, row, col, error_call = rlang::caller_env()) {
   info <- tile_info(x)
 
@@ -275,10 +268,11 @@ tile_extent <- function(x, level, row, col, error_call = rlang::caller_env()) {
 #'   `xmax`, and `ymax`, ordered by row then column.
 #' @family tiling scheme
 #' @export
-#' @examples
-#' \dontrun{
-#' tile_grid(map_server(world_imagery_url()), bbox, 6L)
-#' }
+#' @examplesIf curl::has_internet()
+#' boston <- wk::rct(-71.2, 42.3, -71.0, 42.4, crs = 4326)
+#'
+#' # arithmetic only, so a grid can be inspected before anything downloads
+#' tile_grid(map_server(world_imagery_url()), boston, 12L)
 tile_grid <- function(x, bbox, level, error_call = rlang::caller_env()) {
   info <- tile_info(x)
   check_number_whole(level, call = error_call)

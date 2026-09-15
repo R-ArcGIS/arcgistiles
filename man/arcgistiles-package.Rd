@@ -8,6 +8,16 @@
 \description{
 Read map services, vector tile services, and the 'ArcGIS' basemap styles service. Export map images for a single extent or a series of extents, download raster and vector tiles for an area of interest, and assemble them into georeferenced rasters for plotting alongside vector data.
 }
+\section{Getting started}{
+
+Open a service with \code{\link[=map_server]{map_server()}} or \code{\link[=vector_tile_server]{vector_tile_server()}}. Download the
+tiles covering an area with \code{\link[=get_tiles]{get_tiles()}}, or render an extent on the server
+with \code{\link[=export_map]{export_map()}}.
+
+Either way, \code{\link[=as_rast]{as_rast()}} turns the result into a georeferenced \code{SpatRaster}
+you can plot your own vector data on top of.
+}
+
 \seealso{
 Useful links:
 \itemize{

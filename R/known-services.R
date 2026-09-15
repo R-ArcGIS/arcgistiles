@@ -1,7 +1,7 @@
-#' Public Esri service URLs
+#' Public ArcGIS service URLs
 #'
-#' URLs for a few well known public services, so examples and tests do not have
-#' to spell them out. None require a token to read.
+#' URLs for a handful of well known public services, to use in examples and
+#' when trying the package out. None of them require a token.
 #'
 #' @returns A service URL.
 #' @family services

@@ -30,9 +30,9 @@ A named character vector with the \code{json} and \code{png} paths.
 Downloads the sprite sheet and its index.
 }
 \examples{
-\dontrun{
+\dontshow{if (curl::has_internet()) withAutoprint(\{ # examplesIf}
 vector_tile_sprite(vector_tile_server(open_street_map_url()))
-}
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 Other vector tiles:

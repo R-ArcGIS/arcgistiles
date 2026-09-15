@@ -36,11 +36,14 @@ Features are stored clipped to their tile, so a road crossing a tile
 boundary arrives as one feature per tile.
 }
 \examples{
-\dontrun{
+\dontshow{if (curl::has_internet() && rlang::is_installed("protolite")) withAutoprint(\{ # examplesIf}
 vts <- vector_tile_server(open_street_map_url())
-tiles <- get_vector_tiles(vts, bbox, level = 14L)
-read_vector_tiles(tiles, layers = "road")
-}
+boston <- wk::rct(-71.07, 42.35, -71.05, 42.36, crs = 4326)
+tiles <- get_vector_tiles(vts, boston, level = 14L, progress = FALSE)
+
+roads <- read_vector_tiles(tiles, layers = "road", crs = 3857)
+roads$road
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 Other vector tiles:

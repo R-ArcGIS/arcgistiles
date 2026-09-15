@@ -17,12 +17,13 @@ NULL
 #' @returns A named list of `sf` data frames, one per layer.
 #' @family vector tiles
 #' @export
-#' @examples
-#' \dontrun{
+#' @examplesIf curl::has_internet() && rlang::is_installed("protolite")
 #' vts <- vector_tile_server(open_street_map_url())
-#' tiles <- get_vector_tiles(vts, bbox, level = 14L)
-#' read_vector_tiles(tiles, layers = "road")
-#' }
+#' boston <- wk::rct(-71.07, 42.35, -71.05, 42.36, crs = 4326)
+#' tiles <- get_vector_tiles(vts, boston, level = 14L, progress = FALSE)
+#'
+#' roads <- read_vector_tiles(tiles, layers = "road", crs = 3857)
+#' roads$road
 read_vector_tiles <- function(
   x,
   layers = NULL,
@@ -83,10 +84,11 @@ read_vector_tiles <- function(
 #' @returns A character vector of layer names.
 #' @family vector tiles
 #' @export
-#' @examples
-#' \dontrun{
-#' vector_tile_layers(get_vector_tiles(vts, bbox, level = 14L))
-#' }
+#' @examplesIf curl::has_internet() && rlang::is_installed("protolite")
+#' vts <- vector_tile_server(open_street_map_url())
+#' boston <- wk::rct(-71.07, 42.35, -71.05, 42.36, crs = 4326)
+#'
+#' vector_tile_layers(get_vector_tiles(vts, boston, level = 14L, progress = FALSE))
 vector_tile_layers <- function(x, error_call = rlang::caller_env()) {
   check_vector_tiles(x, error_call)
 

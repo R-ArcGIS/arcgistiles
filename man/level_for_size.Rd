@@ -32,9 +32,11 @@ Picks the level of detail whose resolution renders \code{bbox} closest to \code{
 pixels.
 }
 \examples{
-\dontrun{
-level_for_size(map_server(world_imagery_url()), bbox, c(1024, 1024))
-}
+\dontshow{if (curl::has_internet()) withAutoprint(\{ # examplesIf}
+boston <- wk::rct(-71.2, 42.3, -71.0, 42.4, crs = 4326)
+
+level_for_size(map_server(world_imagery_url()), boston, c(1024, 1024))
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 Other tiling scheme:
