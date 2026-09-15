@@ -1,4 +1,4 @@
-url: https://r.esri.com/arcgistiles/
+url: http://r.esri.com/arcgistiles/
 template:
   bootstrap: 5
 reference:
@@ -71,8 +71,6 @@ reference:
   - storage_format
   - style_family
   - places
-
-
 articles:
 - title: Articles
   navbar: ~
@@ -80,3 +78,4 @@ articles:
   - articles/arcgistiles
   - articles/vector-tiles
   - articles/map-series
+

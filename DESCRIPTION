@@ -10,9 +10,7 @@ Description: Read map services, vector tile services, and the 'ArcGIS'
     interest, and assemble them into georeferenced rasters for plotting
     alongside vector data.
 License: Apache License (>= 2)
-URL: https://github.com/r-arcgis/arcgistiles,
-    https://developers.arcgis.com/r-bridge/api-reference/arcgistiles,
-    https://r.esri.com/arcgistiles/
+URL: https://github.com/r-arcgis/arcgistiles, https://developers.arcgis.com/r-bridge/api-reference/arcgistiles, https://r.esri.com/arcgistiles/, http://r.esri.com/arcgistiles/
 BugReports: https://github.com/r-arcgis/arcgistiles/issues
 Depends:
     R (>= 4.4)
